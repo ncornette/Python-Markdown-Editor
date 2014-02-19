@@ -12,7 +12,6 @@ from BaseHTTPServer import HTTPServer
 import markdown
 import webbrowser
 import traceback
-from markdown import __main__ as markdown_main
 import logging
 from logging import DEBUG, INFO, CRITICAL
 import codecs
@@ -58,19 +57,21 @@ HTML_TEMPLATE = """
     <body style="background-color: rgb(204, 204, 204);">
         <form method="post" action="/" name="markdown_input">
         
+        %(html_head)s
+
         <table style="text-align: left; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
             <tbody>
-
             <tr> <!-- ACTIONS -->
                 <td>
-                    %(actions)s
+                    %(in_actions)s
                 </td>
                 <td>
+                    %(out_actions)s
                 </td>
             </tr>
             <tr> <!-- MARKDOWN INPUT and HTML PREVIEW -->
                 <td style="vertical-align: top; width: 1px;">
-                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="70" rows="20" name="markdown_text" style="min-height: 400px;">%(markdown_input)s</textarea>
+                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="min-height: 400px;">%(markdown_input)s</textarea>
                 </td>
                 <td style="vertical-align: top; width: 100%%;">
                     <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; min-height: 400px;">%(html_result)s</div>
@@ -94,10 +95,10 @@ ACTION_TEMPLATE = '<input type="submit" name="SubmitAction" value="%s">'
 
 OUTPUT_HTML_ENVELOPE = """<html>
 <head>
-<style>
+<style type="text/css">
 %s
 </style>
-<head>
+</head>
 <body>
 <div class="markdown-body">
 %s
@@ -107,6 +108,10 @@ OUTPUT_HTML_ENVELOPE = """<html>
 """
 
 DOC_STYLE = """
+
+body {
+background-color: #FFFFFF;
+}
 
 html {
 font-family: sans-serif;
@@ -522,7 +527,9 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     
     def get_html_content(self):
         return HTML_TEMPLATE % {
-            'actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k in self.server._document.actions.keys()]),
+            'html_head':self.server._document.html_head,
+            'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k in self.server._document.in_actions.keys()]),
+            'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k in self.server._document.out_actions.keys()]),
             'markdown_input':self.server._document.text,
             'html_result':self.server._document.getHtml(),
             'mail_style':DOC_STYLE
@@ -565,7 +572,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
 
-        action_handler = self.server._document.actions.get(action)
+        action_handler = self.server._document.in_actions.get(action) or self.server._document.out_actions.get(action)
 
         if action_handler:
             content = action_handler(self.server._document).encode('utf-8')
@@ -579,11 +586,13 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
 
 class Document:
     
-    def __init__(self, markdown_instance, markdown_input, actions=None, **options):
+    def __init__(self, markdown_instance, markdown_input, in_actions=None, out_actions=None, custom_html_head='' ,**options):
         self.options = options
         self.md = markdown_instance
         self.text = markdown_input
-        self.actions = actions
+        self.in_actions = in_actions
+        self.out_actions =out_actions
+        self.html_head = custom_html_head
     
     def getHtml(self):
         return self.md.convert(self.text)
@@ -637,15 +646,18 @@ def web_action_save(document):
     if input: write_output(input, document.text)
     return result
 
-def web_edit(actions={}, **options):
+def web_edit(in_actions={'Save':web_action_save}, out_actions={}, custom_html_head='', input_text='', **options):
+    
+    if not options.get('extensions'):
+        options.setdefault('extensions',[])
     
     options.get('extensions').extend(('codehilite','extra'))
 
     input = options.get('input', None)
     output = options.get('output', None)
     markdown_instance = markdown.Markdown(**options)
-    input_text = input and read_input or ''
-    doc = Document(markdown_instance, input_text, actions, **options) 
+    input_text = input and read_input(input) or input_text
+    doc = Document(markdown_instance, input_text, in_actions, out_actions, custom_html_head=custom_html_head, **options) 
    
     PORT = 8000
     httpd = HTTPServer(("", PORT), EditorRequestHandler)
@@ -660,6 +672,7 @@ def web_edit(actions={}, **options):
 
 if __name__ == '__main__':
     """Run Markdown from the command line."""
+    from markdown import __main__ as markdown_main
 
     # Parse options and adjust logging level if necessary
     options, logging_level = markdown_main.parse_options()
@@ -668,5 +681,5 @@ if __name__ == '__main__':
     logger.addHandler(logging.StreamHandler())
 
     # Run
-    web_edit(actions={'Save':web_action_save}, **options)
+    web_edit(**options)
 
