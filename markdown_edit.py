@@ -23,7 +23,7 @@ HTML_TEMPLATE = """
 <html>
     <head>
         <meta content="text/html; charset=UTF-8" http-equiv="content-type">
-        <title>Code Review</title>
+        <title>Markdown Editor</title>
 
         <script>
             function updateHtmlPreview()
