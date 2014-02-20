@@ -16,6 +16,7 @@ import logging
 from logging import DEBUG, INFO, CRITICAL
 import codecs
 import base64
+import optparse
 
 logger =  logging.getLogger('MARKDOWN_EDITOR')
 
@@ -113,10 +114,6 @@ body {
 background-color: #FFFFFF;
 }
 
-html {
-font-family: sans-serif;
-}
-
 tt, code, pre {
 font-family: Consolas, "Liberation Mono", Courier, monospace;
 font-size: 12px;
@@ -133,6 +130,7 @@ box-sizing: border-box;
 }
 
 .markdown-body{
+font-family: sans-serif;
 font-size:15px;
 line-height:1.7;
 overflow:hidden;
@@ -567,6 +565,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         markdown_input = qs.get('markdown_text')[0].decode('utf-8')
         action = qs.get('SubmitAction')[0]
         self.server._document.text = markdown_input
+        self.server._document.form_data = qs
         print('action: '+action)
         
         self.send_response(200)
@@ -575,8 +574,9 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         action_handler = self.server._document.in_actions.get(action) or self.server._document.out_actions.get(action)
 
         if action_handler:
-            content = action_handler(self.server._document).encode('utf-8')
-            self.server._running = False
+            content, keep_running = action_handler(self.server._document)
+            content = content.encode('utf-8')
+            self.server._running = keep_running
         else:
             content = self.get_html_message('Unknown action: '+action).encode('utf-8')
             
@@ -593,6 +593,7 @@ class Document:
         self.in_actions = in_actions
         self.out_actions =out_actions
         self.html_head = custom_html_head
+        self.form_data = {}
     
     def getHtml(self):
         return self.md.convert(self.text)
@@ -644,13 +645,13 @@ def web_action_save(document):
     # Save files if defined
     if output is not sys.stdout : write_output(output, result)
     if input: write_output(input, document.text)
-    return result
+    return result, False
 
 def web_edit(in_actions={'Save':web_action_save}, out_actions={}, custom_html_head='', input_text='', **options):
     
     if not options.get('extensions'):
         options.setdefault('extensions',[])
-    
+
     options.get('extensions').extend(('codehilite','extra'))
 
     input = options.get('input', None)
@@ -670,12 +671,66 @@ def web_edit(in_actions={'Save':web_action_save}, out_actions={}, custom_html_he
     while httpd._running:
         httpd.handle_request()
 
+def parse_options():
+    """
+    Define and parse `optparse` options for command-line usage.
+    """
+    usage = """%prog [options] [INPUTFILE]"""
+    desc = "Local web editor for Python Markdown, " \
+           "a Python implementation of John Gruber's Markdown. " \
+           "http://www.freewisdom.org/projects/python-markdown/"
+    ver = "%%prog %s" % markdown.version
+
+    parser = optparse.OptionParser(usage=usage, description=desc, version=ver)
+    parser.add_option("-f", "--file", dest="filename", default=sys.stdout,
+                      help="Write output to OUTPUT_FILE.",
+                      metavar="OUTPUT_FILE")
+    parser.add_option("-e", "--encoding", dest="encoding",
+                      help="Encoding for input and output files.",)
+    parser.add_option("-q", "--quiet", default = CRITICAL,
+                      action="store_const", const=CRITICAL+10, dest="verbose",
+                      help="Suppress all warnings.")
+    parser.add_option("-v", "--verbose",
+                      action="store_const", const=INFO, dest="verbose",
+                      help="Print all warnings.")
+    parser.add_option("-s", "--safe", dest="safe", default=False,
+                      metavar="SAFE_MODE",
+                      help="'replace', 'remove' or 'escape' HTML tags in input")
+    parser.add_option("-o", "--output_format", dest="output_format",
+                      default='xhtml1', metavar="OUTPUT_FORMAT",
+                      help="'xhtml1' (default), 'html4' or 'html5'.")
+    parser.add_option("--noisy",
+                      action="store_const", const=DEBUG, dest="verbose",
+                      help="Print debug messages.")
+    parser.add_option("-x", "--extension", action="append", dest="extensions",
+                      help = "Load extension EXTENSION (codehilite & extra already included)", metavar="EXTENSION")
+    parser.add_option("-n", "--no_lazy_ol", dest="lazy_ol",
+                      action='store_false', default=True,
+                      help="Observe number of first item of ordered lists.")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) == 0:
+        input_file = None
+    else:
+        input_file = args[0]
+
+    if not options.extensions:
+        options.extensions = []
+
+    return {'input': input_file,
+            'output': options.filename,
+            'safe_mode': options.safe,
+            'extensions': options.extensions,
+            'encoding': options.encoding,
+            'output_format': options.output_format,
+            'lazy_ol': options.lazy_ol}, options.verbose
+
 if __name__ == '__main__':
     """Run Markdown from the command line."""
-    from markdown import __main__ as markdown_main
 
     # Parse options and adjust logging level if necessary
-    options, logging_level = markdown_main.parse_options()
+    options, logging_level = parse_options()
     if not options: sys.exit(2)
     logger.setLevel(logging_level)
     logger.addHandler(logging.StreamHandler())
