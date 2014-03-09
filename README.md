@@ -29,3 +29,35 @@ Edit existing markdown file and save html output file :
 ```bash
 $ markdown_edit.py -f readme.html readme.md
 ```
+
+### Extensible
+
+You can import this script as a module to write your own applications based on the markdown editor.
+
+example : 
+
+```python
+import markdown_edit
+
+# ...
+
+def action_send(document):
+
+    send_markdown_text(document.text)
+    # or 
+    send_raw_html_code(document.getHtml())
+    # or 
+    send_html_with_styles(document.getHtmlPage())
+
+    return html_to_display_as_result, keep_running_local_server
+
+if __name__ == '__main__:
+    markdown_edit.web_edit(
+        out_actions =
+            (
+                ('Send',action_send),
+            ),
+        custom_html_head = MY_HTML_HEAD, input_text=INITIAL_MARKDOWN_TEXT)
+
+
+```
