@@ -82,11 +82,6 @@ HTML_TEMPLATE = """
             </tbody>
         </table>
 
-        <a href="http://daringfireball.net/projects/markdown/syntax">Markdown Syntax Documentation</a><br />
-        <a href="http://stackoverflow.com/editing-help">Stackoverflow Markdown help</a><br />
-        <a href="http://en.wikipedia.org/wiki/Markdown">Wikipedia Markdown</a><br />
-        <a href="http://www.unexpected-vortices.com/sw/gouda/quick-markdown-example.html">Quick Markdown Example</a><br />
-
         </form>
     </body>
 </html>
@@ -526,8 +521,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def get_html_content(self):
         return HTML_TEMPLATE % {
             'html_head':self.server._document.html_head.decode('utf-8'),
-            'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k in self.server._document.in_actions.keys()]),
-            'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k in self.server._document.out_actions.keys()]),
+            'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._document.in_actions]),
+            'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._document.out_actions]),
             'markdown_input':self.server._document.text,
             'html_result':self.server._document.getHtml(),
             'mail_style':DOC_STYLE
@@ -568,17 +563,23 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.server._document.form_data = qs
         print('action: '+action)
         
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-
-        action_handler = self.server._document.in_actions.get(action) or self.server._document.out_actions.get(action)
+        action_handler = dict(self.server._document.in_actions).get(action) or self.server._document.out_actions.get(action)
 
         if action_handler:
             content, keep_running = action_handler(self.server._document)
-            content = content.encode('utf-8')
-            self.server._running = keep_running
+            if content:
+                content = content.encode('utf-8')
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+            else:
+                content = ''
+                self.send_response(302)
+                self.send_header('Location', '/')
+                self.server._running = keep_running
         else:
             content = self.get_html_message('Unknown action: '+action).encode('utf-8')
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
             
         self.send_header("Content-length", len(content))
         self.end_headers()
@@ -606,6 +607,9 @@ def read_input(input, encoding=None):
     # Read the source
     if input:
         if isinstance(input, str):
+            if not os.path.exists(input):
+                with open(input, mode='w'):
+                    pass
             input_file = codecs.open(input, mode="r", encoding=encoding)
         else:
             input_file = codecs.getreader(encoding)(input)
@@ -637,6 +641,14 @@ def write_output(output, text, encoding=None):
     else:
         sys.stdout.write(text)
 
+def web_action_close(document):
+    result = ''
+    return result, False
+
+def web_action_preview(document):
+    result = document.getHtmlPage()
+    return result, True
+
 def web_action_save(document):
     input = document.options.get('input')
     output = document.options.get('output')
@@ -645,9 +657,9 @@ def web_action_save(document):
     # Save files if defined
     if output is not sys.stdout : write_output(output, result)
     if input: write_output(input, document.text)
-    return result, False
+    return None, True
 
-def web_edit(in_actions={'Save':web_action_save}, out_actions={}, custom_html_head='', input_text='', **options):
+def web_edit(in_actions=(('Preview',web_action_preview), ('Save',web_action_save), ('Close',web_action_close)), out_actions={}, custom_html_head='', input_text='', **options):
     
     if not options.get('extensions'):
         options.setdefault('extensions',[])
