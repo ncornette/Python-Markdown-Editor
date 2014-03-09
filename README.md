@@ -25,7 +25,7 @@ Edit existing markdown file for preview :
 $ markdown_edit.py readme.md
 ```
 
-Edit existing markdown file and same html output :
+Edit existing markdown file and save html output file :
 ```bash
 $ markdown_edit.py -f readme.html readme.md
 ```
