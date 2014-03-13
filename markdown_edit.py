@@ -563,7 +563,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.server._document.form_data = qs
         print('action: '+action)
         
-        action_handler = dict(self.server._document.in_actions).get(action) or self.server._document.out_actions.get(action)
+        action_handler = dict(self.server._document.in_actions).get(action) or dict(self.server._document.out_actions).get(action)
 
         if action_handler:
             content, keep_running = action_handler(self.server._document)
@@ -659,7 +659,7 @@ def web_action_save(document):
     if input: write_output(input, document.text)
     return None, True
 
-def web_edit(in_actions=(('Preview',web_action_preview), ('Save',web_action_save), ('Close',web_action_close)), out_actions={}, custom_html_head='', input_text='', **options):
+def web_edit(in_actions=(('Preview',web_action_preview), ('Save',web_action_save), ('Close',web_action_close)), out_actions=(), custom_html_head='', input_text='', **options):
     
     if not options.get('extensions'):
         options.setdefault('extensions',[])
