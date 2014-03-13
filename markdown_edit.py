@@ -571,6 +571,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
                 content = content.encode('utf-8')
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
+                self.server._running = keep_running
             else:
                 content = ''
                 self.send_response(302)
