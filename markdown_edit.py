@@ -21,7 +21,7 @@ import optparse
 logger =  logging.getLogger('MARKDOWN_EDITOR')
 
 HTML_TEMPLATE = """
-<html>
+<html id="editor">
     <head>
         <meta content="text/html; charset=UTF-8" http-equiv="content-type">
         <title>Markdown Editor</title>
@@ -109,7 +109,7 @@ OUTPUT_HTML_ENVELOPE = """<html>
 
 DOC_STYLE = """
 
-html {
+#editor {
 overflow: hidden;
 }
 
