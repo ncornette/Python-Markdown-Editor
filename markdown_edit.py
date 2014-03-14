@@ -78,7 +78,7 @@ HTML_TEMPLATE = """
                 <td style="vertical-align: top; width: 40%%;">
                     <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
                 </td>
-                <td style="vertical-align: top; width: 60%%;">
+                <td style="vertical-align: top; width: 60%%; height: 1px">
                     <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; height:100%%; overflow: scroll">%(html_result)s</div>
                 </td>
             </tr>
