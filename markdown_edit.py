@@ -88,6 +88,20 @@ HTML_TEMPLATE = """
 
         </form>
     </body>
+    <script>
+        var s1 = document.getElementById('markdown_input');
+        var s2 = document.getElementById('html_result');
+
+        function select_scroll(e) {
+            viewHeight = s2.getBoundingClientRect().height
+            ratio = (s2.scrollHeight-viewHeight)/(s1.scrollHeight-viewHeight)
+            s2.scrollTop = s1.scrollTop*ratio;
+        }
+
+        s1.addEventListener('scroll', select_scroll, false);
+
+    </script>
+
 </html>
 """
 
@@ -525,7 +539,7 @@ pre .vi { color: #008080 } /* Name.Variable.Instance */
 pre .il { color: #009999 } /* Literal.Number.Integer.Long */
 """
 
-BOTTOM_PADDING = '<br />' * 8
+BOTTOM_PADDING = '<br />' * 2
 
 class EditorRequestHandler(SimpleHTTPRequestHandler):
     
