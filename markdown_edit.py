@@ -58,10 +58,14 @@ HTML_TEMPLATE = """
     <body style="background-color: rgb(204, 204, 204);">
         <form method="post" action="/" name="markdown_input">
         
-        %(html_head)s
-
-        <table style="text-align: left; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
+        <table style="text-align: left; height: 100%%; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
             <tbody>
+            <tr>
+                <th colspan="2">
+                    %(html_head)s
+                </th>
+            </tr>
+            
             <tr> <!-- ACTIONS -->
                 <td>
                     %(in_actions)s
@@ -70,12 +74,12 @@ HTML_TEMPLATE = """
                     %(out_actions)s
                 </td>
             </tr>
-            <tr> <!-- MARKDOWN INPUT and HTML PREVIEW -->
-                <td style="vertical-align: top; width: 1px;">
-                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="min-height: 400px;">%(markdown_input)s</textarea>
+            <tr style="height: 100%%;"> <!-- MARKDOWN INPUT and HTML PREVIEW -->
+                <td style="vertical-align: top; width: 40%%;">
+                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
                 </td>
-                <td style="vertical-align: top; width: 100%%;">
-                    <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; min-height: 400px;">%(html_result)s</div>
+                <td style="vertical-align: top; width: 60%%;">
+                    <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; height:100%%; overflow: scroll">%(html_result)s</div>
                 </td>
             </tr>
 
@@ -105,8 +109,13 @@ OUTPUT_HTML_ENVELOPE = """<html>
 
 DOC_STYLE = """
 
+html {
+overflow: hidden;
+}
+
 body {
 background-color: #FFFFFF;
+overflow:auto;
 }
 
 tt, code, pre {
@@ -516,6 +525,8 @@ pre .vi { color: #008080 } /* Name.Variable.Instance */
 pre .il { color: #009999 } /* Literal.Number.Integer.Long */
 """
 
+BOTTOM_PADDING = '<br />' * 8
+
 class EditorRequestHandler(SimpleHTTPRequestHandler):
     
     def get_html_content(self):
@@ -524,7 +535,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._document.in_actions]),
             'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._document.out_actions]),
             'markdown_input':self.server._document.text,
-            'html_result':self.server._document.getHtml(),
+            'html_result':self.server._document.getHtml() + BOTTOM_PADDING,
             'mail_style':DOC_STYLE
             }
 
@@ -553,7 +564,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         if self.path == '/ajaxUpdate':
             markdown_message = self.rfile.read(length).decode('utf-8')
             self.server._document.text = markdown_message
-            self.wfile.write(self.server._document.getHtml().encode('utf-8'))
+            self.wfile.write(self.server._document.getHtml().encode('utf-8') + BOTTOM_PADDING)
             return
 
         qs = urllib2.urlparse.parse_qs(self.rfile.read(length))
