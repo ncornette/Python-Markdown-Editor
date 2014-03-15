@@ -10,6 +10,8 @@ Standalone editor for your markdown files
  - Github syntax support 
  - Github styles for rendering and codehilite
 
+![screenshot](https://github.com/ncornette/Python-Markdown-Editor/raw/master/screenshot.png)
+
 ### Dependencies
  - Python-Markdown
 
