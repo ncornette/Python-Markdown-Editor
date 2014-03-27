@@ -22,6 +22,7 @@ from subprocess import call
 
 logger =  logging.getLogger('MARKDOWN_EDITOR')
 SYS_EDITOR = os.environ.get('EDITOR','vim')
+MD_EXTENSIONS = ('codehilite','extra')
 
 HTML_TEMPLATE = """
 <html id="editor">
@@ -556,14 +557,6 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             'mail_style':DOC_STYLE
             }
 
-    def get_html_message(self, *message):
-        return '<html><body>%s</body></html>' % '<br />'.join(message)
-
-    def get_html_error(self, message):
-        tb = traceback.format_exc()
-        print tb
-        return '<html><body>%s<br /><pre>%s</pre><a href="/">Continue editing</a></body></html>' % (message, tb)
-
     def do_GET(self):
         self.send_response(200)
         
@@ -585,7 +578,11 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             return
 
         qs = urllib2.urlparse.parse_qs(self.rfile.read(length))
-        markdown_input = qs.get('markdown_text')[0].decode('utf-8')
+        markdown_text = qs.get('markdown_text')
+        if markdown_text: 
+            markdown_input = qs.get('markdown_text')[0].decode('utf-8')
+        else:
+            markdown_input = ''
         action = qs.get('SubmitAction')[0]
         self.server._document.text = markdown_input
         self.server._document.form_data = qs
@@ -594,7 +591,15 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         action_handler = dict(self.server._in_actions).get(action) or dict(self.server._out_actions).get(action)
 
         if action_handler:
-            content, keep_running = action_handler(self.server._document)
+            try:
+                content, keep_running = action_handler(self.server._document)
+            except Exception as e:
+                tb = traceback.format_exc()
+                print tb
+                footer = '<a href="/">Continue editing</a>'
+                content = '<html><body><h4>%s</h4><pre>%s</pre>\n%s</body></html>' % (e.message, tb, footer)
+                keep_running = True
+
             if content:
                 content = content.encode('utf-8')
                 self.send_response(200)
@@ -614,13 +619,16 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(content)
 
-class Document:
+class MarkdownDocument:
     
-    def __init__(self, markdown_instance, markdown_input, **options):
-        self.options = options
-        self.md = markdown_instance
-        self.text = markdown_input
-        self.form_data = {}
+    def __init__(self, mdtext='', infile=None, outfile=None, md=markdown.Markdown(extensions=MD_EXTENSIONS) ):
+        self.input_file = infile
+        self.output_file = outfile
+        initial_markdown = self.input_file and read_input(self.input_file) or mdtext
+
+        self.md = md
+        self.text = initial_markdown
+        self.form_data = {} # used by clients to handle custom form actions
     
     def getHtml(self):
         return self.md.convert(self.text)
@@ -668,16 +676,15 @@ def write_output(output, text, encoding=None):
         sys.stdout.write(text)
 
 def action_close(document):
-    result = ''
-    return result, False
+    return None, False
 
 def action_preview(document):
     result = document.getHtmlPage()
     return result, True
 
 def action_save(document):
-    input = document.options.get('input')
-    output = document.options.get('output')
+    input = document.input_file
+    output = document.output_file
     result = document.getHtmlPage()
 
     # Save files if defined
@@ -695,13 +702,17 @@ def sys_edit(document, editor=None):
         document.text = temp.read().decode('utf-8')
     return document
 
-def terminal_edit(in_actions=[('Save',action_save,'s'), ('Quit',action_close,'q')], out_actions=(), custom_html_head='', input_text='', **options):
+def terminal_edit(doc = MarkdownDocument(), in_actions=[('Save',action_save,'s'), ('Quit',action_close,'q')], out_actions=(), custom_html_head=''):
+
+    default_actions = [('Edit again',None,'e'),('Preview',None,'p')]
 
     action_funcs  = dict([(a[2], a[1]) for a in in_actions])
     action_funcs.update([(a[2], a[1]) for a in out_actions])
 
-    doc = create_document(input_text, **options)
-    
+    actions_prompt = [a[2]+' : '+a[0] for a in out_actions]
+    actions_prompt.extend([a[2]+' : '+a[0] for a in default_actions])
+    actions_prompt.extend([a[2]+' : '+a[0] for a in in_actions])
+
     keep_running = True
     with tempfile.NamedTemporaryFile(mode='r+',suffix=".html") as temp:
         temp.write(sys_edit(doc).getHtmlPage().encode('utf-8'))
@@ -710,13 +721,8 @@ def terminal_edit(in_actions=[('Save',action_save,'s'), ('Quit',action_close,'q'
             resp = raw_input('''Choose command to continue : 
 
 %s
-e : Edit again
-p : Preview
-%s
-?: ''' % (
-'\n'.join([a[2]+' : '+a[0] for a in out_actions]),
-'\n'.join([a[2]+' : '+a[0] for a in in_actions])
-))
+?: ''' % ('\n'.join(actions_prompt))
+            )
             
             command = resp and resp[0] or ''
             if command == 'e':
@@ -729,22 +735,8 @@ p : Preview
             elif action_funcs.has_key(command):
                 result, keep_running =  action_funcs[command](doc)
 
-def create_document(input_text='', **options):
-    if not options.get('extensions'):
-        options.setdefault('extensions',[])
-
-    options.get('extensions').extend(('codehilite','extra'))
-
-    input = options.get('input', None)
-    output = options.get('output', None)
-    markdown_instance = markdown.Markdown(**options)
-    input_text = input and read_input(input) or input_text
-    return Document(markdown_instance, input_text, **options) 
-
-def web_edit(in_actions=(('Preview',action_preview), ('Save',action_save), ('Close',action_close)), out_actions=(), custom_html_head='', input_text='', **options):
+def web_edit(doc = MarkdownDocument(), in_actions=[('Preview',action_preview), ('Save',action_save), ('Close',action_close)], out_actions=[], custom_html_head=''):
     
-    doc = create_document(input_text, **options)
-   
     PORT = 8000
     httpd = HTTPServer(("", PORT), EditorRequestHandler)
     
@@ -808,6 +800,8 @@ def parse_options():
 
     if not options.extensions:
         options.extensions = []
+    
+    options.extensions.extend(MD_EXTENSIONS)
 
     return {'input': input_file,
             'term_edit':options.term_edit,
@@ -826,10 +820,13 @@ if __name__ == '__main__':
     if not options: sys.exit(2)
     logger.setLevel(logging_level)
     logger.addHandler(logging.StreamHandler())
+    
+    markdown_processor = markdown.Markdown(**options)
+    markdown_document = MarkdownDocument(infile=options['input'], outfile=options['output'], md=markdown_processor)
 
     # Run
     if options.get('term_edit'):
-        terminal_edit(**options)
+        terminal_edit(markdown_document)
     else:
-        web_edit(**options)
+        web_edit(markdown_document)
 
