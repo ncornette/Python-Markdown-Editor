@@ -558,11 +558,13 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             }
 
     def do_GET(self):
+        if self.path != '/':
+            self.send_response(404)
+            return
+
         self.send_response(200)
-        
         self.send_header("Content-type", "text/html")
         content = self.get_html_content().encode('utf-8')
-
         self.send_header("Content-length", len(content))
         self.end_headers()
         
