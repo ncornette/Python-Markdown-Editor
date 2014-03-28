@@ -702,16 +702,15 @@ def sys_edit(document, editor=None):
         document.text = temp.read().decode('utf-8')
     return document
 
-def terminal_edit(doc = MarkdownDocument(), in_actions=[('Save',action_save,'s'), ('Quit',action_close,'q')], out_actions=(), custom_html_head=''):
+def terminal_edit(doc = MarkdownDocument(), custom_actions=[]):
+    all_actions = custom_actions + [('Edit again',None,'e'), ('Preview',None,'p')]
 
-    default_actions = [('Edit again',None,'e'),('Preview',None,'p')]
+    if doc.input_file or doc.output_file:
+        all_actions.append(('Save',action_save,'s'))
+    all_actions.append(('Quit',action_close,'q'))
 
-    action_funcs  = dict([(a[2], a[1]) for a in in_actions])
-    action_funcs.update([(a[2], a[1]) for a in out_actions])
-
-    actions_prompt = [a[2]+' : '+a[0] for a in out_actions]
-    actions_prompt.extend([a[2]+' : '+a[0] for a in default_actions])
-    actions_prompt.extend([a[2]+' : '+a[0] for a in in_actions])
+    action_funcs  = dict([(a[2], a[1]) for a in all_actions])
+    actions_prompt = [a[2]+' : '+a[0] for a in all_actions]
 
     keep_running = True
     with tempfile.NamedTemporaryFile(mode='r+',suffix=".html") as temp:
@@ -735,8 +734,12 @@ def terminal_edit(doc = MarkdownDocument(), in_actions=[('Save',action_save,'s')
             elif action_funcs.has_key(command):
                 result, keep_running =  action_funcs[command](doc)
 
-def web_edit(doc = MarkdownDocument(), in_actions=[('Preview',action_preview), ('Save',action_save), ('Close',action_close)], out_actions=[], custom_html_head=''):
-    
+def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head=''):
+    actions = [('Preview',action_preview), ('Close',action_close)]
+
+    if doc.input_file or doc.output_file:
+        actions.insert(0, ('Save',action_save))
+
     PORT = 8000
     httpd = HTTPServer(("", PORT), EditorRequestHandler)
     
@@ -745,8 +748,8 @@ def web_edit(doc = MarkdownDocument(), in_actions=[('Preview',action_preview), (
 
     httpd._running = True
     httpd._document = doc
-    httpd._in_actions = in_actions
-    httpd._out_actions = out_actions
+    httpd._in_actions = actions
+    httpd._out_actions = custom_actions
     httpd._html_head = custom_html_head
     while httpd._running:
         httpd.handle_request()
