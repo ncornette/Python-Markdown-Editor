@@ -19,40 +19,28 @@ import base64
 import optparse
 import tempfile
 from subprocess import call
+import mimetypes
 
-logger =  logging.getLogger('MARKDOWN_EDITOR')
+scriptdir = os.path.dirname(os.path.realpath(__file__))
+
+logger = logging.getLogger('MARKDOWN_EDITOR')
 SYS_EDITOR = os.environ.get('EDITOR','vim')
 MD_EXTENSIONS = ('codehilite','extra')
 
 HTML_TEMPLATE = """
 <html id="editor">
     <head>
-        <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Markdown Editor</title>
-
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
         <script>
-            function updateHtmlPreview()
-            {
-            var xmlhttp;
-            if (window.XMLHttpRequest)
-              {// code for IE7+, Firefox, Chrome, Opera, Safari
-              xmlhttp=new XMLHttpRequest();
-              }
-            else
-              {// code for IE6, IE5
-              xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-              }
-            xmlhttp.onreadystatechange=function()
-              {
-              if (xmlhttp.readyState==4 && xmlhttp.status==200)
-                {
-                document.getElementById("html_result").innerHTML=xmlhttp.responseText;
-                }
-              }
-            xmlhttp.open("POST","ajaxUpdate",false);
-            xmlhttp.send(document.getElementById("markdown_input").value);
+            function updateHtmlPreview() {
+                $.post( "ajaxUpdate", $("#markdown_input")[0].value)
+                    .done(function( data ) {$("#html_result").html(data)});
             }
-
         </script>
         <style>
             %(mail_style)s
@@ -62,7 +50,7 @@ HTML_TEMPLATE = """
     <body style="background-color: rgb(204, 204, 204);">
         <form method="post" action="/" name="markdown_input">
         
-        <table style="text-align: left; height: 100%%; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
+        <table class="table-condensed" style="text-align: left; height: 100%%; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
             <tbody>
             <tr>
                 <th colspan="2">
@@ -72,18 +60,18 @@ HTML_TEMPLATE = """
             
             <tr> <!-- ACTIONS -->
                 <td>
-                    %(in_actions)s
+                    <div class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
                 </td>
                 <td>
-                    %(out_actions)s
+                    <div class="btn-group btn-group-sm">%(out_actions)s</div>
                 </td>
             </tr>
             <tr style="height: 100%%;"> <!-- MARKDOWN INPUT and HTML PREVIEW -->
                 <td style="vertical-align: top; width: 40%%;">
-                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
+                    <textarea class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
                 </td>
                 <td style="vertical-align: top; width: 60%%; height: 1px">
-                    <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; height:100%%; overflow: scroll">%(html_result)s</div>
+                    <div class="html-output markdown-body" id="html_result" style="overflow: scroll;">%(html_result)s</div>
                 </td>
             </tr>
 
@@ -91,6 +79,8 @@ HTML_TEMPLATE = """
         </table>
 
         </form>
+    <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.min.js"></script>
+    <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
     </body>
     <script>
         var s1 = document.getElementById('markdown_input');
@@ -103,13 +93,13 @@ HTML_TEMPLATE = """
         }
 
         s1.addEventListener('scroll', select_scroll, false);
-
+        s1.focus()
     </script>
 
 </html>
 """
 
-ACTION_TEMPLATE = '<input type="submit" name="SubmitAction" value="%s">'
+ACTION_TEMPLATE = '<input type="submit" class="btn btn-default" name="SubmitAction" value="%s">'
 
 OUTPUT_HTML_ENVELOPE = """<html>
 <head>
@@ -126,6 +116,19 @@ OUTPUT_HTML_ENVELOPE = """<html>
 """
 
 DOC_STYLE = """
+
+.html-output {
+margin-left: 0;
+margin-right: 0;
+background-color: #fff;
+border-width: 1px;
+border-color: #ddd;
+border-radius: 4px;
+box-shadow: none;
+position: relative;
+padding: 15px 15px 0px;
+height:100%;
+}
 
 #editor {
 overflow: hidden;
@@ -558,16 +561,24 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             }
 
     def do_GET(self):
-        if self.path != '/':
+        if self.path.startswith('/libs'):
+            lib_path = os.path.join(scriptdir, self.path[1:])
+            print lib_path
+            with open(lib_path, 'r') as lib:
+                content = lib.read()
+            self.send_response(200)
+            self.send_header("Content-type", mimetypes.guess_type(self.path)[0])
+        elif self.path != '/':
+            content = ''
             self.send_response(404)
-            return
-
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        content = self.get_html_content().encode('utf-8')
+        else:
+            content = self.get_html_content().encode('utf-8')
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+    
         self.send_header("Content-length", len(content))
-        self.end_headers()
         
+        self.end_headers()
         self.wfile.write(content)
 
     def do_POST(self):
