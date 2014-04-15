@@ -28,6 +28,7 @@ SYS_EDITOR = os.environ.get('EDITOR','vim')
 MD_EXTENSIONS = ('codehilite','extra')
 
 HTML_TEMPLATE = """
+<!DOCTYPE html>
 <html id="editor">
     <head>
         <meta charset="utf-8">
@@ -48,37 +49,27 @@ HTML_TEMPLATE = """
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
+        <div style="position:absolute; top:0; bottom:0; left:0; right:0">
+        %(html_head)s
+        <div style="height:50px" class="row">
         <form method="post" action="/" name="markdown_input">
-        
-        <table class="table-condensed" style="text-align: left; height: 100%%; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
-            <tbody>
-            <tr>
-                <th colspan="2">
-                    %(html_head)s
-                </th>
-            </tr>
-            
-            <tr> <!-- ACTIONS -->
-                <td>
-                    <div class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
-                </td>
-                <td>
-                    <div class="btn-group btn-group-sm">%(out_actions)s</div>
-                </td>
-            </tr>
-            <tr style="height: 100%%;"> <!-- MARKDOWN INPUT and HTML PREVIEW -->
-                <td style="vertical-align: top; width: 40%%;">
-                    <textarea class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
-                </td>
-                <td style="vertical-align: top; width: 60%%; height: 1px">
-                    <div class="html-output markdown-body" id="html_result" style="overflow: scroll;">%(html_result)s</div>
-                </td>
-            </tr>
-
-            </tbody>
-        </table>
-
+            <div class="col-sm-5">
+                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
+            </div>
+            <div class="col-sm-7">
+                <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
+            </div>
         </form>
+        </div>
+        <div style="padding:15px; position: absolute; top:50px; bottom:0; left:0; right:0" class="row">
+            <div style="height:100%%" class="col-sm-5">
+                <textarea class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%;height:100%%">%(markdown_input)s</textarea>
+            </div>
+            <div style="height:100%%" class="col-sm-7">
+                <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
+            </div>
+        </div>
+        </div>
     <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.min.js"></script>
     <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
     </body>
