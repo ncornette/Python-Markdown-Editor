@@ -35,8 +35,8 @@ HTML_TEMPLATE = """
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Markdown Editor</title>
-        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
         <script>
             function updateHtmlPreview() {
                 $.post( "ajaxUpdate", $("#markdown_input")[0].value)
@@ -49,9 +49,11 @@ HTML_TEMPLATE = """
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
-        <div style="position:absolute; top:0; bottom:0; left:0; right:0">
-        %(html_head)s
-        <div style="height:50px" class="row">
+        <div style="position:fixed; top:0; bottom:0; left:0; right:0">
+        
+        <div style="margin-top:15px; margin-left:15px; margin-right:15px; background:#552200" id="head">%(html_head)s</div>
+
+        <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
         <form method="post" action="/" name="markdown_input">
             <div class="col-sm-5">
                 <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
@@ -59,9 +61,8 @@ HTML_TEMPLATE = """
             <div class="col-sm-7">
                 <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
             </div>
-        </form>
         </div>
-        <div style="padding:15px; position: absolute; top:50px; bottom:0; left:0; right:0" class="row">
+        <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
             <div style="height:100%%" class="col-sm-5">
                 <textarea class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%;height:100%%">%(markdown_input)s</textarea>
             </div>
@@ -69,13 +70,18 @@ HTML_TEMPLATE = """
                 <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
             </div>
         </div>
+        </form>
         </div>
-    <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.min.js"></script>
-    <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+    <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
+    <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
     </body>
     <script>
-        var s1 = document.getElementById('markdown_input');
-        var s2 = document.getElementById('html_result');
+        head_height = $('#head').outerHeight(true)
+        $('#mdedit').css('top', head_height+'px')
+        $('#mdedit-body').css('top', (head_height+$('#mdedit').height())+'px')
+
+        var s1 = $('#markdown_input')[0]
+        var s2 = $('#html_result')[0]
 
         function select_scroll(e) {
             viewHeight = s2.getBoundingClientRect().height

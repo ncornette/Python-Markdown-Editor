@@ -42,7 +42,7 @@ audio:not([controls]) {
 template {
   display: none;
 }
-a {
+/*a {
   background: transparent;
 }
 a:active,
@@ -106,7 +106,7 @@ pre,
 samp {
   font-family: monospace, monospace;
   font-size: 1em;
-}
+}*/
 button,
 input,
 optgroup,
@@ -175,7 +175,7 @@ textarea {
 }
 optgroup {
   font-weight: bold;
-}
+}/*
 table {
   border-spacing: 0;
   border-collapse: collapse;
@@ -183,7 +183,7 @@ table {
 td,
 th {
   padding: 0;
-}
+}*/
 @media print {
   * {
     color: #000 !important;
@@ -191,7 +191,7 @@ th {
     background: transparent !important;
     box-shadow: none !important;
   }
-  a,
+/*  a,
   a:visited {
     text-decoration: underline;
   }
@@ -230,7 +230,7 @@ th {
   h2,
   h3 {
     page-break-after: avoid;
-  }
+  }*/
   select {
     background: #fff !important;
   }
@@ -267,7 +267,7 @@ th {
      -moz-box-sizing: border-box;
           box-sizing: border-box;
 }
-html {
+/*html {
   font-size: 62.5%;
 
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -278,7 +278,7 @@ body {
   line-height: 1.42857143;
   color: #333;
   background-color: #fff;
-}
+}*/
 input,
 button,
 select,
@@ -287,7 +287,7 @@ textarea {
   font-size: inherit;
   line-height: inherit;
 }
-a {
+/*a {
   color: #428bca;
   text-decoration: none;
 }
@@ -306,7 +306,7 @@ figure {
 }
 img {
   vertical-align: middle;
-}
+}*/
 .img-responsive,
 .thumbnail > img,
 .thumbnail a > img,
@@ -350,7 +350,7 @@ hr {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-h1,
+/*h1,
 h2,
 h3,
 h4,
@@ -467,7 +467,7 @@ h6,
 }
 p {
   margin: 0 0 10px;
-}
+}*/
 .lead {
   margin-bottom: 20px;
   font-size: 16px;
@@ -478,11 +478,11 @@ p {
   .lead {
     font-size: 21px;
   }
-}
+}/*
 small,
 .small {
   font-size: 85%;
-}
+}*/
 cite {
   font-style: normal;
 }
@@ -567,7 +567,7 @@ a.bg-danger:hover {
   margin: 40px 0 20px;
   border-bottom: 1px solid #eee;
 }
-ul,
+/*ul,
 ol {
   margin-top: 0;
   margin-bottom: 10px;
@@ -577,7 +577,7 @@ ol ul,
 ul ol,
 ol ol {
   margin-bottom: 0;
-}
+}*/
 .list-unstyled {
   padding-left: 0;
   list-style: none;
@@ -592,7 +592,7 @@ ol ol {
   padding-right: 5px;
   padding-left: 5px;
 }
-dl {
+/*dl {
   margin-top: 0;
   margin-bottom: 20px;
 }
@@ -605,7 +605,7 @@ dt {
 }
 dd {
   margin-left: 0;
-}
+}*/
 @media (min-width: 768px) {
   .dl-horizontal dt {
     float: left;
@@ -620,16 +620,16 @@ dd {
     margin-left: 180px;
   }
 }
-abbr[title],
+/*abbr[title],
 abbr[data-original-title] {
   cursor: help;
   border-bottom: 1px dotted #999;
-}
+}*/
 .initialism {
   font-size: 90%;
   text-transform: uppercase;
 }
-blockquote {
+/*blockquote {
   padding: 10px 20px;
   margin: 0 0 20px;
   font-size: 17.5px;
@@ -652,7 +652,7 @@ blockquote footer:before,
 blockquote small:before,
 blockquote .small:before {
   content: '\2014 \00A0';
-}
+}*/
 .blockquote-reverse,
 blockquote.pull-right {
   padding-right: 15px;
@@ -677,7 +677,7 @@ blockquote.pull-right small:after,
 blockquote.pull-right .small:after {
   content: '\00A0 \2014';
 }
-blockquote:before,
+/*blockquote:before,
 blockquote:after {
   content: "";
 }
@@ -728,7 +728,7 @@ pre code {
   white-space: pre-wrap;
   background-color: transparent;
   border-radius: 0;
-}
+}*/
 .pre-scrollable {
   max-height: 340px;
   overflow-y: scroll;
@@ -1400,13 +1400,13 @@ pre code {
     margin-left: 0;
   }
 }
-table {
+/*table {
   max-width: 100%;
   background-color: transparent;
 }
 th {
   text-align: left;
-}
+}*/
 .table {
   width: 100%;
   margin-bottom: 20px;
