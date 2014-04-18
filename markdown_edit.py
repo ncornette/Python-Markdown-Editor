@@ -698,7 +698,7 @@ def action_save(document):
     result = document.getHtmlPage()
 
     # Save files if defined
-    if output is not sys.stdout : write_output(output, result)
+    if output: write_output(output, result)
     if input: write_output(input, document.text)
     return None, True
 
@@ -760,7 +760,7 @@ def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head=''):
     httpd._document = doc
     httpd._in_actions = actions
     httpd._out_actions = custom_actions
-    httpd._html_head = custom_html_head
+    httpd._html_head = custom_html_head or doc.input_file and '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>%s</span>' % os.path.basename(doc.input_file) or ''
     while httpd._running:
         httpd.handle_request()
 
@@ -778,7 +778,7 @@ def parse_options():
     parser.add_option("-t", "--terminal", dest="term_edit",
                       action='store_true', default=False,
                       help="Edit within terminal.")
-    parser.add_option("-f", "--file", dest="filename", default=sys.stdout,
+    parser.add_option("-f", "--file", dest="filename", default=None,
                       help="Write output to OUTPUT_FILE.",
                       metavar="OUTPUT_FILE")
     parser.add_option("-e", "--encoding", dest="encoding",
