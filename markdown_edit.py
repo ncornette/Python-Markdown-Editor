@@ -49,12 +49,12 @@ HTML_TEMPLATE = """
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
+        <form class="form-horizontal" method="post" action="/" name="markdown_input">
         <div style="position:fixed; top:0; bottom:0; left:0; right:0">
         
-        <div style="margin-top:15px; margin-left:15px; margin-right:15px; background:#552200" id="head">%(html_head)s</div>
+        <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">%(html_head)s</div>
 
         <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
-        <form method="post" action="/" name="markdown_input">
             <div class="col-sm-5">
                 <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
             </div>
@@ -64,14 +64,14 @@ HTML_TEMPLATE = """
         </div>
         <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
             <div style="height:100%%" class="col-sm-5">
-                <textarea class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%;height:100%%">%(markdown_input)s</textarea>
+                <textarea style="color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
             </div>
             <div style="height:100%%" class="col-sm-7">
                 <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
             </div>
         </div>
-        </form>
         </div>
+        </form>
     <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
     <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
     </body>
@@ -825,7 +825,7 @@ def parse_options():
             'output_format': options.output_format,
             'lazy_ol': options.lazy_ol}, options.verbose
 
-if __name__ == '__main__':
+def main():
     """Run Markdown from the command line."""
 
     # Parse options and adjust logging level if necessary
@@ -842,4 +842,7 @@ if __name__ == '__main__':
         terminal_edit(markdown_document)
     else:
         web_edit(markdown_document)
+
+if __name__ == '__main__':
+    main()
 
