@@ -64,7 +64,7 @@ HTML_TEMPLATE = """
         </div>
         <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
             <div style="height:100%%" class="col-sm-5">
-                <textarea style="color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
+                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
             </div>
             <div style="height:100%%" class="col-sm-7">
                 <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
