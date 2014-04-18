@@ -19,40 +19,29 @@ import base64
 import optparse
 import tempfile
 from subprocess import call
+import mimetypes
 
-logger =  logging.getLogger('MARKDOWN_EDITOR')
+scriptdir = os.path.dirname(os.path.realpath(__file__))
+
+logger = logging.getLogger('MARKDOWN_EDITOR')
 SYS_EDITOR = os.environ.get('EDITOR','vim')
 MD_EXTENSIONS = ('codehilite','extra')
 
 HTML_TEMPLATE = """
+<!DOCTYPE html>
 <html id="editor">
     <head>
-        <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Markdown Editor</title>
-
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
         <script>
-            function updateHtmlPreview()
-            {
-            var xmlhttp;
-            if (window.XMLHttpRequest)
-              {// code for IE7+, Firefox, Chrome, Opera, Safari
-              xmlhttp=new XMLHttpRequest();
-              }
-            else
-              {// code for IE6, IE5
-              xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-              }
-            xmlhttp.onreadystatechange=function()
-              {
-              if (xmlhttp.readyState==4 && xmlhttp.status==200)
-                {
-                document.getElementById("html_result").innerHTML=xmlhttp.responseText;
-                }
-              }
-            xmlhttp.open("POST","ajaxUpdate",false);
-            xmlhttp.send(document.getElementById("markdown_input").value);
+            function updateHtmlPreview() {
+                $.post( "ajaxUpdate", $("#markdown_input")[0].value)
+                    .done(function( data ) {$("#html_result").html(data)});
             }
-
         </script>
         <style>
             %(mail_style)s
@@ -60,41 +49,39 @@ HTML_TEMPLATE = """
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
-        <form method="post" action="/" name="markdown_input">
+        <form class="form-horizontal" method="post" action="/" name="markdown_input">
+        <div style="position:fixed; top:0; bottom:0; left:0; right:0">
         
-        <table style="text-align: left; height: 100%%; width: 100%%;" border="0" cellpadding="2" cellspacing="2">
-            <tbody>
-            <tr>
-                <th colspan="2">
-                    %(html_head)s
-                </th>
-            </tr>
-            
-            <tr> <!-- ACTIONS -->
-                <td>
-                    %(in_actions)s
-                </td>
-                <td>
-                    %(out_actions)s
-                </td>
-            </tr>
-            <tr style="height: 100%%;"> <!-- MARKDOWN INPUT and HTML PREVIEW -->
-                <td style="vertical-align: top; width: 40%%;">
-                    <textarea onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text" style="width:100%%; height: 100%%;">%(markdown_input)s</textarea>
-                </td>
-                <td style="vertical-align: top; width: 60%%; height: 1px">
-                    <div class="markdown-body" id="html_result" style="border-style: inset; padding-right: 4px; padding-left: 4px; background-color: white; display: block; height:100%%; overflow: scroll">%(html_result)s</div>
-                </td>
-            </tr>
+        <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">%(html_head)s</div>
 
-            </tbody>
-        </table>
-
+        <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
+            <div class="col-sm-5">
+                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
+            </div>
+            <div class="col-sm-7">
+                <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
+            </div>
+        </div>
+        <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
+            <div style="height:100%%" class="col-sm-5">
+                <textarea style="color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
+            </div>
+            <div style="height:100%%" class="col-sm-7">
+                <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
+            </div>
+        </div>
+        </div>
         </form>
+    <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
+    <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
     </body>
     <script>
-        var s1 = document.getElementById('markdown_input');
-        var s2 = document.getElementById('html_result');
+        head_height = $('#head').outerHeight(true)
+        $('#mdedit').css('top', head_height+'px')
+        $('#mdedit-body').css('top', (head_height+$('#mdedit').height())+'px')
+
+        var s1 = $('#markdown_input')[0]
+        var s2 = $('#html_result')[0]
 
         function select_scroll(e) {
             viewHeight = s2.getBoundingClientRect().height
@@ -103,13 +90,13 @@ HTML_TEMPLATE = """
         }
 
         s1.addEventListener('scroll', select_scroll, false);
-
+        s1.focus()
     </script>
 
 </html>
 """
 
-ACTION_TEMPLATE = '<input type="submit" name="SubmitAction" value="%s">'
+ACTION_TEMPLATE = '<input type="submit" class="btn btn-default" name="SubmitAction" value="%s">'
 
 OUTPUT_HTML_ENVELOPE = """<html>
 <head>
@@ -126,6 +113,19 @@ OUTPUT_HTML_ENVELOPE = """<html>
 """
 
 DOC_STYLE = """
+
+.html-output {
+margin-left: 0;
+margin-right: 0;
+background-color: #fff;
+border-width: 1px;
+border-color: #ddd;
+border-radius: 4px;
+box-shadow: none;
+position: relative;
+padding: 15px 15px 0px;
+height:100%;
+}
 
 #editor {
 overflow: hidden;
@@ -558,16 +558,24 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             }
 
     def do_GET(self):
-        if self.path != '/':
+        if self.path.startswith('/libs'):
+            lib_path = os.path.join(scriptdir, self.path[1:])
+            print lib_path
+            with open(lib_path, 'r') as lib:
+                content = lib.read()
+            self.send_response(200)
+            self.send_header("Content-type", mimetypes.guess_type(self.path)[0])
+        elif self.path != '/':
+            content = ''
             self.send_response(404)
-            return
-
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        content = self.get_html_content().encode('utf-8')
+        else:
+            content = self.get_html_content().encode('utf-8')
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+    
         self.send_header("Content-length", len(content))
-        self.end_headers()
         
+        self.end_headers()
         self.wfile.write(content)
 
     def do_POST(self):
@@ -817,7 +825,7 @@ def parse_options():
             'output_format': options.output_format,
             'lazy_ol': options.lazy_ol}, options.verbose
 
-if __name__ == '__main__':
+def main():
     """Run Markdown from the command line."""
 
     # Parse options and adjust logging level if necessary
@@ -834,4 +842,7 @@ if __name__ == '__main__':
         terminal_edit(markdown_document)
     else:
         web_edit(markdown_document)
+
+if __name__ == '__main__':
+    main()
 
