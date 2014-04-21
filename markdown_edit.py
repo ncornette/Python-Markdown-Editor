@@ -46,6 +46,8 @@ HTML_TEMPLATE = """
         <style>
             %(mail_style)s
         </style>
+        <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
+        <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
@@ -72,8 +74,6 @@ HTML_TEMPLATE = """
         </div>
         </div>
         </form>
-    <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
-    <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
     </body>
     <script>
         head_height = $('#head').outerHeight(true)
@@ -581,6 +581,12 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.getheader('content-length'))
         
+        if self.server._ajax_handlers.has_key(self.path):
+            request_data = self.rfile.read(length).decode('utf-8')
+            result_data = self.server._ajax_handlers.get(self.path)(request_data)
+            self.wfile.write(result_data.encode('utf-8'))
+            return
+            
         if self.path == '/ajaxUpdate':
             markdown_message = self.rfile.read(length).decode('utf-8')
             self.server._document.text = markdown_message
@@ -744,7 +750,24 @@ def terminal_edit(doc = MarkdownDocument(), custom_actions=[]):
             elif action_funcs.has_key(command):
                 result, keep_running =  action_funcs[command](doc)
 
-def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head=''):
+def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head='', ajax_handlers={}):
+    """
+    Launches webbrowser editor
+    Params :
+        - doc: MarkdownDocument instance to edit
+        - custom_action: list of ('action_name', action_handker) to be displayed as buttons in web interface
+
+            action_handler is a function that receives MarkdownDocument as uniquqe parameter and must return a tuple, example : 
+
+            def action(markdown_document):
+                html_result = '<h1>Done</h1>'
+                kill_editor = True
+                return html_result, kill_editor
+
+        - custom_html_head: html code to insert above the editor
+        - ajax_handlers: map of 'ajax_req_path':ajax_handler_func to handle your own ajax requests
+    """
+
     actions = [('Preview',action_preview), ('Close',action_close)]
 
     if doc.input_file or doc.output_file:
@@ -761,6 +784,7 @@ def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head=''):
     httpd._in_actions = actions
     httpd._out_actions = custom_actions
     httpd._html_head = custom_html_head or doc.input_file and '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>%s</span>' % os.path.basename(doc.input_file) or ''
+    httpd._ajax_handlers = ajax_handlers
     while httpd._running:
         httpd.handle_request()
 
