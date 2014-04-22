@@ -39,7 +39,7 @@ HTML_TEMPLATE = """
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
         <script>
             function updateHtmlPreview() {
-                $.post( "ajaxUpdate", $("#markdown_input")[0].value)
+                $.post( "ajaxUpdate", $("#markdown_input").val())
                     .done(function( data ) {$("#html_result").html(data)});
             }
         </script>
