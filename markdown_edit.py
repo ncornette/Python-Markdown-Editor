@@ -623,9 +623,9 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
                 self.send_header('Location', '/')
                 self.server._running = keep_running
         else:
-            content = self.get_html_message('Unknown action: '+action).encode('utf-8')
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
+            content = ''
+            self.send_response(302)
+            self.send_header('Location', '/')
             
         self.send_header("Content-length", len(content))
         self.end_headers()
