@@ -549,7 +549,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     
     def get_html_content(self):
         return HTML_TEMPLATE % {
-            'html_head':self.server._html_head,
+            'html_head':callable(self.server._html_head) and self.server._html_head() or self.server._html_head,
             'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._in_actions]),
             'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._out_actions]),
             'markdown_input':self.server._document.text,
