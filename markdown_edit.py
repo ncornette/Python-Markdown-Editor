@@ -593,13 +593,9 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(self.server._document.getHtml().encode('utf-8') + BOTTOM_PADDING)
             return
 
-        qs = urllib2.urlparse.parse_qs(self.rfile.read(length))
-        markdown_text = qs.get('markdown_text')
-        if markdown_text: 
-            markdown_input = qs.get('markdown_text')[0].decode('utf-8')
-        else:
-            markdown_input = ''
-        action = qs.get('SubmitAction')[0]
+        qs = dict(urllib2.urlparse.parse_qsl(self.rfile.read(length), True))
+        markdown_input = qs['markdown_text'].decode('utf-8')
+        action = qs.get('SubmitAction','')
         self.server._document.text = markdown_input
         self.server._document.form_data = qs
         print('action: '+action)
