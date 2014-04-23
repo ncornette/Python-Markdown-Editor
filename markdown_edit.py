@@ -37,10 +37,16 @@ HTML_TEMPLATE = """
         <title>Markdown Editor</title>
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
+        <link href="libs/codemirror/codemirror.css" rel="stylesheet">
+        <link href="libs/codemirror/theme/neat.css" rel="stylesheet">
         <script>
+            var myCodeMirror;
             function updateHtmlPreview() {
-                $.post( "ajaxUpdate", $("#markdown_input").val())
+                $.post( "ajaxUpdate", myCodeMirror.getValue())
                     .done(function( data ) {$("#html_result").html(data)});
+            }
+            function updateMarkdownInput(value) {
+                myCodeMirror.setValue(value)
             }
         </script>
         <style>
@@ -48,6 +54,8 @@ HTML_TEMPLATE = """
         </style>
         <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
         <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
+        <script src="libs/codemirror/codemirror.js"></script>
+        <script src="libs/codemirror/mode/markdown.js"></script>
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
@@ -76,11 +84,25 @@ HTML_TEMPLATE = """
         </form>
     </body>
     <script>
+        
+        // Setup custom header height
         head_height = $('#head').outerHeight(true)
         $('#mdedit').css('top', head_height+'px')
         $('#mdedit-body').css('top', (head_height+$('#mdedit').height())+'px')
 
-        var s1 = $('#markdown_input')[0]
+        // Setup CodeMirror for markdown input
+        myCodeMirror = CodeMirror.fromTextArea($('#markdown_input')[0], {
+            "value": "",
+            "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
+            "theme":  "neat"
+            });
+        $(".CodeMirror").addClass("form-control")
+        $(".CodeMirror").addClass("focusedInput")
+        myCodeMirror.setSize("100%%","100%%")
+        myCodeMirror.on("keyup", updateHtmlPreview)
+
+        // Setup scrollbars sync
+        var s1 = myCodeMirror.display.scrollbarV
         var s2 = $('#html_result')[0]
 
         function select_scroll(e) {
@@ -90,7 +112,10 @@ HTML_TEMPLATE = """
         }
 
         s1.addEventListener('scroll', select_scroll, false);
-        s1.focus()
+
+        // Set Focus on markdown input
+        myCodeMirror.focus()
+        
     </script>
 
 </html>
@@ -113,6 +138,15 @@ OUTPUT_HTML_ENVELOPE = """<html>
 """
 
 DOC_STYLE = """
+
+.focusedInput {
+border-color: #ccc;
+border-color: rgba(82,168,236,.8);
+outline: 0;
+outline: thin dotted \9;
+-moz-box-shadow: 0 0 8px rgba(82,168,236,.6);
+box-shadow: 0 0 8px rgba(82,168,236,.6);
+}
 
 .html-output {
 margin-left: 0;
@@ -583,7 +617,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         
         if self.server._ajax_handlers.has_key(self.path):
             request_data = self.rfile.read(length).decode('utf-8')
-            result_data = self.server._ajax_handlers.get(self.path)(request_data)
+            result_data = self.server._ajax_handlers.get(self.path)(self.server._document, request_data)
             self.wfile.write(result_data.encode('utf-8'))
             return
             
