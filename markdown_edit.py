@@ -65,18 +65,19 @@ HTML_TEMPLATE = """
         <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">%(html_head)s</div>
 
         <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
-            <div class="col-sm-5">
+            <div class="col-sm-6">
                 <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
             </div>
-            <div class="col-sm-7">
+            <div style="padding-left:0px" class="col-sm-6">
                 <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
             </div>
         </div>
+
         <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
-            <div style="height:100%%" class="col-sm-5">
+            <div style="height:100%%" class="col-sm-6">
                 <textarea style="font-family: monospace; font-size: small; color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
             </div>
-            <div style="height:100%%" class="col-sm-7">
+            <div style="height:100%%; padding-left:0px" class="col-sm-6">
                 <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
             </div>
         </div>
