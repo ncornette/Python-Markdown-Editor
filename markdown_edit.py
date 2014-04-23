@@ -83,6 +83,22 @@ HTML_TEMPLATE = """
         </div>
         </div>
         </form>
+
+        <div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+          <div class="modal-dialog ">
+            <div id="wait-content" class="modal-content">
+                <div class="modal-header">
+                    <h1>Processing...</h1>
+                </div>
+                <div class="modal-body">
+                    <div class="progress progress-striped active">
+                        <div class="progress-bar" style="width: 100%%;"></div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
     </body>
     <script>
         
@@ -115,6 +131,7 @@ HTML_TEMPLATE = """
         s1.addEventListener('scroll', select_scroll, false);
 
         // Set Focus on markdown input
+        $('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
         myCodeMirror.focus()
         
     </script>
@@ -122,7 +139,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-ACTION_TEMPLATE = '<input type="submit" class="btn btn-default" name="SubmitAction" value="%s">'
+ACTION_TEMPLATE = """<input type="submit" class="btn btn-default" name="SubmitAction" value="%s" onclick="$('#pleaseWaitDialog').modal('show')">"""
 
 OUTPUT_HTML_ENVELOPE = """<html>
 <head>
