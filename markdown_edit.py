@@ -111,6 +111,7 @@ HTML_TEMPLATE = """
         myCodeMirror = CodeMirror.fromTextArea($('#markdown_input')[0], {
             "value": "",
             "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
+            "indentUnit": "4",
             "theme":  "neat"
             });
         $(".CodeMirror").addClass("form-control")
