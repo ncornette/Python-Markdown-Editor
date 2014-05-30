@@ -39,8 +39,8 @@ HTML_TEMPLATE = """
         <title>Markdown Editor</title>
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
-        <link href="libs/codemirror/codemirror.css" rel="stylesheet">
-        <link href="libs/codemirror/theme/neat.css" rel="stylesheet">
+        <link href="libs/codemirror-4.2.0/codemirror.css" rel="stylesheet">
+        <link href="libs/codemirror-4.2.0/theme/neat.css" rel="stylesheet">
         <script>
             var myCodeMirror;
             function updateHtmlPreview() {
@@ -56,8 +56,8 @@ HTML_TEMPLATE = """
         </style>
         <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
         <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
-        <script src="libs/codemirror/codemirror.js"></script>
-        <script src="libs/codemirror/mode/markdown.js"></script>
+        <script src="libs/codemirror-4.2.0/codemirror.js"></script>
+        <script src="libs/codemirror-4.2.0/mode/markdown.js"></script>
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
