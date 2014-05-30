@@ -25,7 +25,9 @@ scriptdir = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger('MARKDOWN_EDITOR')
 SYS_EDITOR = os.environ.get('EDITOR','vim')
-MD_EXTENSIONS = ('codehilite','extra')
+
+sys.path.insert(0,scriptdir)
+MD_EXTENSIONS = ('codehilite','extra','strikethrough')
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
