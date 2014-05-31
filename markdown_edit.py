@@ -31,9 +31,7 @@ sys.path.append(scriptdir)
 MARKDOWN_EXT = ('codehilite','extra','strikethrough')
 MARKDOWN_CSS = join(scriptdir, 'styles/markdown.css')
 PYGMENTS_CSS = join(scriptdir, 'styles/pygments.css')
-
 ACTION_TEMPLATE = """<input type="submit" class="btn btn-default" name="SubmitAction" value="%s" onclick="$('#pleaseWaitDialog').modal('show')">"""
-
 BOTTOM_PADDING = '<br />' * 2
 
 class EditorRequestHandler(SimpleHTTPRequestHandler):
@@ -57,34 +55,37 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
                 content = lib.read()
             self.send_response(200)
             self.send_header("Content-type", mimetypes.guess_type(self.path)[0])
-        elif self.path != '/':
-            content = ''
-            self.send_response(404)
-        else:
+        elif self.path == '/':
             content = self.get_html_content().encode('utf-8')
             self.send_response(200)
             self.send_header("Content-type", "text/html")
+        else:
+            content = ''
+            self.send_response(404)
     
         self.send_header("Content-length", len(content))
-        
         self.end_headers()
         self.wfile.write(content)
 
     def do_POST(self):
         length = int(self.headers.getheader('content-length'))
         
-        if self.server._ajax_handlers.has_key(self.path):
-            request_data = self.rfile.read(length).decode('utf-8')
-            result_data = self.server._ajax_handlers.get(self.path)(self.server._document, request_data)
-            self.wfile.write(result_data.encode('utf-8'))
-            return
-            
+        # Ajax update preview
         if self.path == '/ajaxUpdate':
             markdown_message = self.rfile.read(length).decode('utf-8')
             self.server._document.text = markdown_message
             self.wfile.write(self.server._document.getHtml().encode('utf-8') + BOTTOM_PADDING)
             return
 
+        # Ajax action handler
+        if self.server._ajax_handlers.has_key(self.path):
+            request_data = self.rfile.read(length).decode('utf-8')
+            handler_func = self.server._ajax_handlers.get(self.path)
+            result_data = handler_func(self.server._document, request_data)
+            self.wfile.write(result_data.encode('utf-8'))
+            return
+            
+        # Form submit action
         qs = dict(urllib2.urlparse.parse_qsl(self.rfile.read(length), True))
         markdown_input = qs['markdown_text'].decode('utf-8')
         action = qs.get('SubmitAction','')
