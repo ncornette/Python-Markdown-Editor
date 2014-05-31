@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html id="editor">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Markdown Editor</title>
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
+        <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
+        <link href="libs/codemirror-4.2.0/codemirror.css" rel="stylesheet">
+        <link href="libs/codemirror-4.2.0/theme/neat.css" rel="stylesheet">
+        <script>
+            var myCodeMirror;
+            function updateHtmlPreview() {
+                $.post( "ajaxUpdate", myCodeMirror.getValue())
+                    .done(function( data ) {$("#html_result").html(data)});
+            }
+            function updateMarkdownInput(value) {
+                myCodeMirror.setValue(value)
+            }
+        </script>
+        <style>
+            .focusedInput {
+            border-color: #ccc;
+            border-color: rgba(82,168,236,.8);
+            outline: 0;
+            outline: thin dotted \9;
+            -moz-box-shadow: 0 0 8px rgba(82,168,236,.6);
+            box-shadow: 0 0 8px rgba(82,168,236,.6);
+            }
+            
+            .html-output {
+            margin-left: 0;
+            margin-right: 0;
+            background-color: #fff;
+            border-width: 1px;
+            border-color: #ddd;
+            border-radius: 4px;
+            box-shadow: none;
+            position: relative;
+            padding: 15px 15px 0px;
+            height:100%%;
+            }
+            
+            #editor {
+            overflow: hidden;
+            }
+            
+            body {
+            background-color: #FFFFFF;
+            overflow:auto;
+            }
+            
+            * {
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            }
+
+            %(mail_style)s
+        </style>
+        <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
+        <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
+        <script src="libs/codemirror-4.2.0/codemirror.js"></script>
+        <script src="libs/codemirror-4.2.0/mode/markdown.js"></script>
+    </head>
+
+    <body style="background-color: rgb(204, 204, 204);">
+        <form class="form-horizontal" method="post" action="/" name="markdown_input">
+        <div style="position:fixed; top:0; bottom:0; left:0; right:0">
+        
+        <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">%(html_head)s</div>
+
+        <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
+            <div class="col-sm-6">
+                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
+            </div>
+            <div style="padding-left:0px" class="col-sm-6">
+                <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
+            </div>
+        </div>
+
+        <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
+            <div style="height:100%%" class="col-sm-6">
+                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
+            </div>
+            <div style="height:100%%; padding-left:0px" class="col-sm-6">
+                <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
+            </div>
+        </div>
+        </div>
+        </form>
+
+        <div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+          <div class="modal-dialog ">
+            <div id="wait-content" class="modal-content">
+                <div class="modal-header">
+                    <h1>Processing...</h1>
+                </div>
+                <div class="modal-body">
+                    <div class="progress progress-striped active">
+                        <div class="progress-bar" style="width: 100%%;"></div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+    </body>
+    <script>
+        
+        // Setup custom header height
+        head_height = $('#head').outerHeight(true)
+        $('#mdedit').css('top', head_height+'px')
+        $('#mdedit-body').css('top', (head_height+$('#mdedit').height())+'px')
+
+        // Setup CodeMirror for markdown input
+        myCodeMirror = CodeMirror.fromTextArea($('#markdown_input')[0], {
+            "value": "",
+            "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
+            "indentUnit": "4",
+            "theme":  "neat"
+            });
+        $(".CodeMirror").addClass("form-control")
+        $(".CodeMirror").addClass("focusedInput")
+        myCodeMirror.setSize("100%%","100%%")
+        myCodeMirror.on("keyup", updateHtmlPreview)
+
+        // Setup scrollbars sync
+        var s1 = myCodeMirror.display.scrollbarV
+        var s2 = $('#html_result')[0]
+
+        function select_scroll(e) {
+            viewHeight = s2.getBoundingClientRect().height
+            ratio = (s2.scrollHeight-viewHeight)/(s1.scrollHeight-viewHeight)
+            s2.scrollTop = s1.scrollTop*ratio;
+        }
+
+        s1.addEventListener('scroll', select_scroll, false);
+
+        // Set Focus on markdown input
+        $('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
+        myCodeMirror.focus()
+        
+    </script>
+
+</html>
