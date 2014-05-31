@@ -55,11 +55,11 @@ def action_send(document):
 
 if __name__ == '__main__:
     markdown_edit.web_edit(
-        custom_actions =
+        actions =
             [
                 ('Send',action_send),
             ],
-        custom_html_head = MY_HTML_HEAD)
+        title = MY_HTML_HEAD)
 
 
 ```

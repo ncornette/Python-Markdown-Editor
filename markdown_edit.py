@@ -231,8 +231,8 @@ def sys_edit(markdown_document, editor=None):
         markdown_document.text = temp.read().decode('utf-8')
     return markdown_document
 
-def terminal_edit(doc = MarkdownDocument(), custom_actions=[]):
-    all_actions = custom_actions + [('Edit again',None,'e'), ('Preview',None,'p')]
+def terminal_edit(doc = MarkdownDocument(), actions=[]):
+    all_actions = actions + [('Edit again',None,'e'), ('Preview',None,'p')]
 
     if doc.input_file or doc.output_file:
         all_actions.append(('Save',action_save,'s'))
@@ -263,12 +263,12 @@ def terminal_edit(doc = MarkdownDocument(), custom_actions=[]):
             elif action_funcs.has_key(command):
                 result, keep_running =  action_funcs[command](doc)
 
-def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head='', ajax_handlers={}):
+def web_edit(doc = MarkdownDocument(), actions=[], title='', ajax_handlers={}):
     """
     Launches webbrowser editor
     Params :
         - doc: MarkdownDocument instance to edit
-        - custom_action: list of ('action_name', action_handker) to be displayed as buttons in web interface
+        - actions: list of ('action_name', action_handker) to be displayed as buttons in web interface
 
             action_handler is a function that receives MarkdownDocument as uniquqe parameter and must return a tuple, example : 
 
@@ -277,14 +277,14 @@ def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head='', a
                 kill_editor = True
                 return html_result, kill_editor
 
-        - custom_html_head: html code to insert above the editor
+        - title: html code to insert above the editor
         - ajax_handlers: map of 'ajax_req_path':ajax_handler_func to handle your own ajax requests
     """
 
-    actions = [('Preview',action_preview), ('Close',action_close)]
+    default_actions = [('Preview',action_preview), ('Close',action_close)]
 
     if doc.input_file or doc.output_file:
-        actions.insert(0, ('Save',action_save))
+        default_actions.insert(0, ('Save',action_save))
 
     PORT = 8000
     httpd = HTTPServer(("", PORT), EditorRequestHandler)
@@ -294,9 +294,9 @@ def web_edit(doc = MarkdownDocument(), custom_actions=[], custom_html_head='', a
 
     httpd._running = True
     httpd._document = doc
-    httpd._in_actions = actions
-    httpd._out_actions = custom_actions
-    httpd._html_head = custom_html_head or doc.input_file and '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>%s</span>' % os.path.basename(doc.input_file) or ''
+    httpd._in_actions = default_actions
+    httpd._out_actions = actions
+    httpd._html_head = title or doc.input_file and '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>%s</span>' % os.path.basename(doc.input_file) or ''
     httpd._ajax_handlers = ajax_handlers
     while httpd._running:
         httpd.handle_request()
