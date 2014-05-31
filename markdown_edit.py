@@ -3,6 +3,7 @@
 
 import sys
 import os
+from os.path import join
 import SimpleHTTPServer
 import SocketServer
 import urllib2
@@ -27,7 +28,9 @@ logger = logging.getLogger('MARKDOWN_EDITOR')
 SYS_EDITOR = os.environ.get('EDITOR','vim')
 
 sys.path.append(scriptdir)
-MD_EXTENSIONS = ('codehilite','extra','strikethrough')
+MARKDOWN_EXT = ('codehilite','extra','strikethrough')
+MARKDOWN_CSS = join(scriptdir, 'styles/markdown.css')
+PYGMENTS_CSS = join(scriptdir, 'styles/pygments.css')
 
 ACTION_TEMPLATE = """<input type="submit" class="btn btn-default" name="SubmitAction" value="%s" onclick="$('#pleaseWaitDialog').modal('show')">"""
 
@@ -36,7 +39,7 @@ BOTTOM_PADDING = '<br />' * 2
 class EditorRequestHandler(SimpleHTTPRequestHandler):
     
     def get_html_content(self):
-        with open(os.path.join(scriptdir,'markdown_edit.html')) as template:
+        with open(join(scriptdir,'markdown_edit.html')) as template:
             return template.read() % {
                 'html_head':callable(self.server._html_head) and self.server._html_head() or self.server._html_head,
                 'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._in_actions]),
@@ -48,7 +51,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith('/libs'):
-            lib_path = os.path.join(scriptdir, self.path[1:])
+            lib_path = join(scriptdir, self.path[1:])
             print lib_path
             with open(lib_path, 'r') as lib:
                 content = lib.read()
@@ -122,13 +125,25 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
 
 class MarkdownDocument:
     
-    def __init__(self, mdtext='', infile=None, outfile=None, md=markdown.Markdown(extensions=MD_EXTENSIONS), css_styles='' ):
+    def __init__(self, mdtext='', infile=None, outfile=None, md=None, markdown_css=MARKDOWN_CSS, pygments_css=PYGMENTS_CSS ):
         self.input_file = infile
         self.output_file = outfile
         initial_markdown = self.input_file and read_input(self.input_file) or mdtext
-        self.inline_css = css_styles
+        self.inline_css = ''
 
-        self.md = md
+        if markdown_css:
+            with open(markdown_css) as markdown_css_file:
+                self.inline_css += markdown_css_file.read()
+
+        if pygments_css:
+            with open(pygments_css) as pygments_css_file:
+                self.inline_css += pygments_css_file.read()
+        
+        if not md:
+            self.md = markdown.Markdown(extensions=MARKDOWN_EXT)
+        else:
+            self.md = md
+
         self.text = initial_markdown
         self.form_data = {} # used by clients to handle custom form actions
     
@@ -206,15 +221,15 @@ def action_save(document):
     if input: write_output(input, document.text)
     return None, True
 
-def sys_edit(document, editor=None):
+def sys_edit(markdown_document, editor=None):
     use_editor = editor or SYS_EDITOR
     with tempfile.NamedTemporaryFile(mode='r+',suffix=".markdown") as temp:
-        temp.write(document.text.encode('utf-8'))
+        temp.write(markdown_document.text.encode('utf-8'))
         temp.flush()
         call([use_editor, temp.name])
         temp.seek(0)
-        document.text = temp.read().decode('utf-8')
-    return document
+        markdown_document.text = temp.read().decode('utf-8')
+    return markdown_document
 
 def terminal_edit(doc = MarkdownDocument(), custom_actions=[]):
     all_actions = custom_actions + [('Edit again',None,'e'), ('Preview',None,'p')]
@@ -336,7 +351,7 @@ def parse_options():
     if not options.extensions:
         options.extensions = []
     
-    options.extensions.extend(MD_EXTENSIONS)
+    options.extensions.extend(MARKDOWN_EXT)
 
     return {'input': input_file,
             'term_edit':options.term_edit,
@@ -357,14 +372,7 @@ def main():
     logger.addHandler(logging.StreamHandler())
     
     markdown_processor = markdown.Markdown(**options)
-
-    css_styles = ''
-    with open(os.path.join(scriptdir, 'styles/markdown.css')) as markdown_css_file:
-        css_styles += markdown_css_file.read()
-    with open(os.path.join(scriptdir, 'styles/pygments.css')) as pygments_css_file:
-        css_styles += pygments_css_file.read()
-
-    markdown_document = MarkdownDocument(infile=options['input'], outfile=options['output'], md=markdown_processor, css_styles=css_styles)
+    markdown_document = MarkdownDocument(infile=options['input'], outfile=options['output'], md=markdown_processor)
 
     # Run
     if options.get('term_edit'):

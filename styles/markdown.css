@@ -288,7 +288,7 @@ padding:0
 }
 
 .markdown-body code:before,.markdown-body code:after,.markdown-body tt:before,.markdown-body tt:after{
-content:"\\00a0"
+content:"\00a0"
 }
 
 .markdown-body code{
