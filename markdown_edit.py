@@ -129,7 +129,7 @@ class MarkdownDocument:
     def __init__(self, mdtext='', infile=None, outfile=None, md=None, markdown_css=MARKDOWN_CSS, pygments_css=PYGMENTS_CSS ):
         self.input_file = infile
         self.output_file = outfile
-        initial_markdown = self.input_file and read_input(self.input_file) or mdtext
+        initial_markdown = mdtext and mdtext or read_input(self.input_file)
         self.inline_css = ''
 
         if markdown_css:
@@ -232,8 +232,11 @@ def sys_edit(markdown_document, editor=None):
         markdown_document.text = temp.read().decode('utf-8')
     return markdown_document
 
-def terminal_edit(doc = MarkdownDocument(), actions=[]):
+def terminal_edit(doc = None, actions=[]):
     all_actions = actions + [('Edit again',None,'e'), ('Preview',None,'p')]
+
+    if not doc:
+        doc = MarkdownDocument()
 
     if doc.input_file or doc.output_file:
         all_actions.append(('Save',action_save,'s'))
@@ -264,7 +267,7 @@ def terminal_edit(doc = MarkdownDocument(), actions=[]):
             elif action_funcs.has_key(command):
                 result, keep_running =  action_funcs[command](doc)
 
-def web_edit(doc = MarkdownDocument(), actions=[], title='', ajax_handlers={}):
+def web_edit(doc = None, actions=[], title='', ajax_handlers={}):
     """
     Launches webbrowser editor
     Params :
@@ -283,6 +286,9 @@ def web_edit(doc = MarkdownDocument(), actions=[], title='', ajax_handlers={}):
     """
 
     default_actions = [('Preview',action_preview), ('Close',action_close)]
+
+    if not doc:
+        doc = MarkdownDocument()
 
     if doc.input_file or doc.output_file:
         default_actions.insert(0, ('Save',action_save))
@@ -372,11 +378,12 @@ def main():
     logger.setLevel(logging_level)
     logger.addHandler(logging.StreamHandler())
     
+    term_edit = options.pop('term_edit')
     markdown_processor = markdown.Markdown(**options)
     markdown_document = MarkdownDocument(infile=options['input'], outfile=options['output'], md=markdown_processor)
 
     # Run
-    if options.get('term_edit'):
+    if term_edit:
         terminal_edit(markdown_document)
     else:
         web_edit(markdown_document)
