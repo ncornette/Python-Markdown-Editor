@@ -4,12 +4,23 @@
 import sys
 import os
 from os.path import join
-import SimpleHTTPServer
-import SocketServer
-import urllib2
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from SimpleHTTPServer import BaseHTTPServer
-from BaseHTTPServer import HTTPServer
+
+if sys.version_info[0]<3:
+    import SimpleHTTPServer
+    import SocketServer
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SimpleHTTPServer import BaseHTTPServer
+    from BaseHTTPServer import HTTPServer
+    import urllib2
+    parse_qsl = urllib2.urlparse.parse_qsl
+else:
+    import http.server
+    import socketserver
+    import urllib.request, urllib.error, urllib.parse
+    from http.server import SimpleHTTPRequestHandler
+    from http.server import HTTPServer
+    from urllib.parse import parse_qsl
+
 import markdown
 import webbrowser
 import traceback
@@ -50,8 +61,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/libs'):
             lib_path = join(scriptdir, self.path[1:])
-            print lib_path
-            with open(lib_path, 'r') as lib:
+            print(lib_path)
+            with open(lib_path, 'rb') as lib:
                 content = lib.read()
             self.send_response(200)
             self.send_header("Content-type", mimetypes.guess_type(self.path)[0])
@@ -68,17 +79,17 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_POST(self):
-        length = int(self.headers.getheader('content-length'))
+        length = int(self.headers.get('Content-Length'))
         
         # Ajax update preview
         if self.path == '/ajaxUpdate':
             markdown_message = self.rfile.read(length).decode('utf-8')
             self.server._document.text = markdown_message
-            self.wfile.write(self.server._document.getHtml().encode('utf-8') + BOTTOM_PADDING)
+            self.wfile.write(self.server._document.getHtml().encode('utf-8') + BOTTOM_PADDING.encode('utf-8'))
             return
 
         # Ajax action handler
-        if self.server._ajax_handlers.has_key(self.path):
+        if self.path in self.server._ajax_handlers:
             request_data = self.rfile.read(length).decode('utf-8')
             handler_func = self.server._ajax_handlers.get(self.path)
             result_data = handler_func(self.server._document, request_data)
@@ -86,8 +97,9 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             return
             
         # Form submit action
-        qs = dict(urllib2.urlparse.parse_qsl(self.rfile.read(length), True))
-        markdown_input = qs['markdown_text'].decode('utf-8')
+        form_data = self.rfile.read(length)
+        qs = dict(parse_qsl(codecs.decode(form_data,'utf-8'), True))
+        markdown_input = qs['markdown_text']
         action = qs.get('SubmitAction','')
         self.server._document.text = markdown_input
         self.server._document.form_data = qs
@@ -100,23 +112,23 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
                 content, keep_running = action_handler(self.server._document)
             except Exception as e:
                 tb = traceback.format_exc()
-                print tb
+                print(tb)
                 footer = '<a href="/">Continue editing</a>'
                 content = '<html><body><h4>%s</h4><pre>%s</pre>\n%s</body></html>' % (e.message, tb, footer)
                 keep_running = True
 
             if content:
-                content = content.encode('utf-8')
+                content = codecs.encode(content,'utf-8')
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.server._running = keep_running
             else:
-                content = ''
+                content = codecs.encode('','utf-8')
                 self.send_response(302)
                 self.send_header('Location', '/')
                 self.server._running = keep_running
         else:
-            content = ''
+            content = codecs.encode('','utf-8')
             self.send_response(302)
             self.send_header('Location', '/')
             
@@ -166,23 +178,24 @@ class MarkdownDocument:
         </html>
         """ % (self.inline_css, self.getHtml())
 
-def read_input(input, encoding=None):
+def read_input(input_file, encoding=None):
     encoding = encoding or "utf-8"
+    text = ''
     # Read the source
-    if input:
-        if isinstance(input, str):
-            if not os.path.exists(input):
-                with open(input, mode='w'):
+    if input_file == '-':
+        text = sys.stdin.read()
+        if not isinstance(text, str):
+            text = text.decode(encoding)
+    elif input_file:
+        if isinstance(input_file, str):
+            if not os.path.exists(input_file):
+                with open(input_file, mode='w'):
                     pass
-            input_file = codecs.open(input, mode="r", encoding=encoding)
+            input_file = codecs.open(input_file, mode="rb", encoding=encoding)
         else:
-            input_file = codecs.getreader(encoding)(input)
+            input_file = codecs.getreader(encoding)(input_file)
         text = input_file.read()
         input_file.close()
-    else:
-        text = sys.stdin.read()
-        if not isinstance(text, unicode):
-            text = text.decode(encoding)
 
     text = text.lstrip('\ufeff') # remove the byte-order mark
     return text
@@ -213,13 +226,13 @@ def action_preview(document):
     return result, True
 
 def action_save(document):
-    input = document.input_file
-    output = document.output_file
+    input_file = document.input_file
+    output_file = document.output_file
     result = document.getHtmlPage()
 
     # Save files if defined
-    if output: write_output(output, result)
-    if input: write_output(input, document.text)
+    if output_file: write_output(output_file, result)
+    if input_file: write_output(input_file, document.text)
     return None, True
 
 def sys_edit(markdown_document, editor=None):
@@ -250,7 +263,7 @@ def terminal_edit(doc = None, actions=[]):
         temp.write(sys_edit(doc).getHtmlPage().encode('utf-8'))
         temp.flush()
         while keep_running:
-            resp = raw_input('''Choose command to continue : 
+            resp = input('''Choose command to continue : 
 
 %s
 ?: ''' % ('\n'.join(actions_prompt))
@@ -264,7 +277,7 @@ def terminal_edit(doc = None, actions=[]):
                 temp.flush()
             elif command == 'p':
                 webbrowser.open(temp.name)
-            elif action_funcs.has_key(command):
+            elif command in action_funcs:
                 result, keep_running =  action_funcs[command](doc)
 
 def web_edit(doc = None, actions=[], title='', ajax_handlers={}):
