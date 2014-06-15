@@ -164,8 +164,10 @@ class MarkdownDocument:
         return self.md.convert(self.text)
 
     def getHtmlPage(self):
-        return """<html>
+        return """<!DOCTYPE html>
+        <html>
         <head>
+        <meta charset="utf-8">
         <style type="text/css">
         %s
         </style>
