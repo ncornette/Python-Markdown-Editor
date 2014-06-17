@@ -21,6 +21,13 @@ else:
     from http.server import HTTPServer
     from urllib.parse import parse_qsl
 
+if sys.version_info[0] < 3:
+    text_type = unicode
+    binary_type = str
+else:
+    text_type = str
+    binary_type = bytes
+
 import markdown
 import webbrowser
 import traceback
@@ -97,9 +104,14 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             return
             
         # Form submit action
-        form_data = self.rfile.read(length)
-        qs = dict(parse_qsl(codecs.decode(form_data,'utf-8'), True))
-        markdown_input = qs['markdown_text']
+        form_data = codecs.getreader('ascii')(self.rfile).read(length)
+        if sys.version_info[0]>2:
+            qs = dict(parse_qsl(form_data, True))
+            markdown_input = qs['markdown_text']
+        else:
+            qs = dict(parse_qsl(str(form_data), True))
+            markdown_input = qs['markdown_text'].decode('utf-8')
+
         action = qs.get('SubmitAction','')
         self.server._document.text = markdown_input
         self.server._document.form_data = qs
@@ -205,7 +217,7 @@ def read_input(input_file, encoding=None):
 def write_output(output, text, encoding=None):
     encoding = encoding or "utf-8"
     # Write to file or stdout
-    if output:
+    if output and output != '-':
         if isinstance(output, str):
             output_file = codecs.open(output, "w",
                                       encoding=encoding,
