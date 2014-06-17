@@ -20,6 +20,7 @@ else:
     from http.server import SimpleHTTPRequestHandler
     from http.server import HTTPServer
     from urllib.parse import parse_qsl
+    raw_input = input
 
 if sys.version_info[0] < 3:
     text_type = unicode
@@ -277,7 +278,7 @@ def terminal_edit(doc = None, actions=[]):
         temp.write(sys_edit(doc).getHtmlPage().encode('utf-8'))
         temp.flush()
         while keep_running:
-            resp = input('''Choose command to continue : 
+            resp = raw_input('''Choose command to continue : 
 
 %s
 ?: ''' % ('\n'.join(actions_prompt))
