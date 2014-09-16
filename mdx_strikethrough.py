@@ -12,6 +12,6 @@ class StrikeThroughExtension(markdown.Extension):
         # Insert del pattern into markdown parser
         md.inlinePatterns.add('del', del_tag, '>not_strong')
 
-def makeExtension(configs=None):
+def makeExtension(configs={}):
     return StrikeThroughExtension(configs=configs)
 
