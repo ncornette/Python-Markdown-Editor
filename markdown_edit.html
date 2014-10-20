@@ -74,7 +74,12 @@
 
         <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
             <div class="col-sm-6">
-                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div></div>
+                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div>
+                <div class="checkbox">
+                    <label>
+                      <input style="margin-left:0px;" type="checkbox" onchange="toggleVimMode(this)" />Vim mode
+                    </label>
+                </div></div>
             </div>
             <div style="padding-left:0px" class="col-sm-6">
                 <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
@@ -120,7 +125,9 @@
             "value": "",
             "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
             "indentUnit": "4",
-            "theme":  "neat"
+            "showCursorWhenSelecting": true,
+            "theme":"neat",
+            "vimMode":false
             });
         $(".CodeMirror").addClass("form-control")
         $(".CodeMirror").addClass("focusedInput")
@@ -135,6 +142,16 @@
             viewHeight = s2.getBoundingClientRect().height
             ratio = (s2.scrollHeight-viewHeight)/(s1.scrollHeight-viewHeight)
             s2.scrollTop = s1.scrollTop*ratio;
+        }
+
+        function toggleVimMode(e) {
+            if (e.checked) {
+                myCodeMirror.setOption('theme', '3024-night')
+                myCodeMirror.setOption('vimMode', true)
+            } else {
+                myCodeMirror.setOption('theme', 'neat')
+                myCodeMirror.setOption('vimMode', false)
+            }
         }
 
         s1.addEventListener('scroll', select_scroll, false);
