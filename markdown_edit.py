@@ -295,7 +295,7 @@ def terminal_edit(doc = None, actions=[]):
             elif command in action_funcs:
                 result, keep_running =  action_funcs[command](doc)
 
-def web_edit(doc = None, actions=[], title='', ajax_handlers={}):
+def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
     """
     Launches webbrowser editor
     Params :
@@ -321,11 +321,10 @@ def web_edit(doc = None, actions=[], title='', ajax_handlers={}):
     if doc.input_file or doc.output_file:
         default_actions.insert(0, ('Save',action_save))
 
-    PORT = 8000
-    httpd = HTTPServer(("", PORT), EditorRequestHandler)
+    httpd = HTTPServer(("", port), EditorRequestHandler)
     
-    print('Opening a browser page on : http://localhost:'+str(PORT))
-    webbrowser.open('http://localhost:' + str(PORT))
+    print('Opening a browser page on : http://localhost:'+str(port))
+    webbrowser.open('http://localhost:' + str(port))
 
     httpd._running = True
     httpd._document = doc
@@ -347,6 +346,8 @@ def parse_options():
     ver = "%%prog %s" % markdown.version
 
     parser = optparse.OptionParser(usage=usage, description=desc, version=ver)
+    parser.add_option("-p", "--port", dest="port", default=8222, 
+                      help="Change listen port for Web eidt.")
     parser.add_option("-t", "--terminal", dest="term_edit",
                       action='store_true', default=False,
                       help="Edit within terminal.")
@@ -390,6 +391,7 @@ def parse_options():
 
     return {'input': input_file,
             'term_edit':options.term_edit,
+            'port':options.port,
             'output': options.filename,
             'safe_mode': options.safe,
             'extensions': options.extensions,
@@ -414,7 +416,7 @@ def main():
     if term_edit:
         terminal_edit(markdown_document)
     else:
-        web_edit(markdown_document)
+        web_edit(markdown_document, port=options['port'])
 
 if __name__ == '__main__':
     main()
