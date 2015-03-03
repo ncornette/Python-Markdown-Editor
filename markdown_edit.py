@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 import sys
@@ -260,7 +260,7 @@ def sys_edit(markdown_document, editor=None):
         markdown_document.text = temp.read().decode('utf-8')
     return markdown_document
 
-def terminal_edit(doc = None, actions=[]):
+def terminal_edit(doc = None, actions=[], default_action=None):
     all_actions = actions + [('Edit again',None,'e'), ('Preview',None,'p')]
 
     if not doc:
@@ -275,24 +275,24 @@ def terminal_edit(doc = None, actions=[]):
 
     keep_running = True
     with tempfile.NamedTemporaryFile(mode='r+',suffix=".html") as temp:
-        temp.write(sys_edit(doc).getHtmlPage().encode('utf-8'))
+        temp.write(doc.getHtmlPage().encode('utf-8'))
         temp.flush()
         while keep_running:
-            resp = raw_input('''Choose command to continue : 
+            command = default_action or raw_input('''Choose command : 
 
 %s
 ?: ''' % ('\n'.join(actions_prompt))
             )
             
-            command = resp and resp[0] or ''
-            if command == 'e':
+            default_action = None
+            if command[:1] == 'e':
                 temp.seek(0)
                 temp.write(sys_edit(doc).getHtmlPage().encode('utf-8'))
                 temp.truncate()
                 temp.flush()
-            elif command == 'p':
+            elif command[:1] == 'p':
                 webbrowser.open(temp.name)
-            elif command in action_funcs:
+            elif command[:1] in action_funcs:
                 result, keep_running =  action_funcs[command](doc)
 
 def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
@@ -351,6 +351,9 @@ def parse_options():
     parser.add_option("-t", "--terminal", dest="term_edit",
                       action='store_true', default=False,
                       help="Edit within terminal.")
+    parser.add_option("-w", "--preview", dest="term_preview",
+                      action='store_true', default=False,
+                      help="Preview in webbrowser.")
     parser.add_option("-f", "--file", dest="filename", default=None,
                       help="Write output to OUTPUT_FILE.",
                       metavar="OUTPUT_FILE")
@@ -390,7 +393,8 @@ def parse_options():
     options.extensions.extend(MARKDOWN_EXT)
 
     return {'input': input_file,
-            'term_edit':options.term_edit,
+            'term_edit':options.term_edit or options.term_preview,
+            'term_action':options.term_preview and 'p' or 'e',
             'port':options.port,
             'output': options.filename,
             'safe_mode': options.safe,
@@ -414,7 +418,7 @@ def main():
 
     # Run
     if term_edit:
-        terminal_edit(markdown_document)
+        terminal_edit(markdown_document, default_action=options['term_action'])
     else:
         web_edit(markdown_document, port=options['port'])
 
