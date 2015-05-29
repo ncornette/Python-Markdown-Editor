@@ -4,66 +4,71 @@
 import sys
 import os
 from os.path import join
-
-if sys.version_info[0]<3:
-    import SimpleHTTPServer
-    import SocketServer
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from SimpleHTTPServer import BaseHTTPServer
-    from BaseHTTPServer import HTTPServer
-    import urllib2
-    parse_qsl = urllib2.urlparse.parse_qsl
-else:
-    import http.server
-    import socketserver
-    import urllib.request, urllib.error, urllib.parse
-    from http.server import SimpleHTTPRequestHandler
-    from http.server import HTTPServer
-    from urllib.parse import parse_qsl
-    raw_input = input
-
-if sys.version_info[0] < 3:
-    text_type = unicode
-    binary_type = str
-else:
-    text_type = str
-    binary_type = bytes
-
 import markdown
 import webbrowser
 import traceback
 import logging
 from logging import DEBUG, INFO, CRITICAL
 import codecs
-import base64
 import optparse
 import tempfile
 from subprocess import call
 import mimetypes
 
+if sys.version_info[0] < 3:
+    import SimpleHTTPServer
+    import SocketServer
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SimpleHTTPServer import BaseHTTPServer
+    from BaseHTTPServer import HTTPServer
+    import urllib2
+else:
+    import http.server
+    import socketserver
+    import urllib.request
+    import urllib.error
+    import urllib.parse
+    from http.server import SimpleHTTPRequestHandler
+    from http.server import HTTPServer
+    from urllib.parse import parse_qsl
+
+if sys.version_info[0] < 3:
+    text_type = unicode
+    binary_type = str
+    parse_qsl = urllib2.urlparse.parse_qsl
+else:
+    text_type = str
+    binary_type = bytes
+    raw_input = input
+
 scriptdir = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger('MARKDOWN_EDITOR')
-SYS_EDITOR = os.environ.get('EDITOR','vim')
+SYS_EDITOR = os.environ.get('EDITOR', 'vim')
 
 sys.path.append(scriptdir)
-MARKDOWN_EXT = ('codehilite','extra','strikethrough')
+MARKDOWN_EXT = ('codehilite', 'extra', 'strikethrough')
 MARKDOWN_CSS = join(scriptdir, 'styles/markdown.css')
 PYGMENTS_CSS = join(scriptdir, 'styles/pygments.css')
-ACTION_TEMPLATE = """<input type="submit" class="btn btn-default" name="SubmitAction" value="%s" onclick="$('#pleaseWaitDialog').modal('show')">"""
+ACTION_TEMPLATE = """<input \
+        type="submit" class="btn btn-default" \
+        name="SubmitAction" value="%s" \
+        onclick="$('#pleaseWaitDialog').modal('show')">"""
 BOTTOM_PADDING = '<br />' * 2
 
+
 class EditorRequestHandler(SimpleHTTPRequestHandler):
-    
+
     def get_html_content(self):
-        with open(join(scriptdir,'markdown_edit.html')) as template:
+        with open(join(scriptdir, 'markdown_edit.html')) as template:
             return template.read() % {
-                'html_head':callable(self.server._html_head) and self.server._html_head() or self.server._html_head,
-                'in_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._in_actions]),
-                'out_actions':'&nbsp;'.join([ACTION_TEMPLATE % k for k,v in self.server._out_actions]),
-                'markdown_input':self.server._document.text,
-                'html_result':self.server._document.getHtml() + BOTTOM_PADDING,
-                'mail_style':self.server._document.inline_css
+                'html_head':      callable(self.server._html_head) and
+                self.server._html_head() or self.server._html_head,
+                'in_actions':     '&nbsp;'.join([ACTION_TEMPLATE % k for k, v in self.server._in_actions]),
+                'out_actions':    '&nbsp;'.join([ACTION_TEMPLATE % k for k, v in self.server._out_actions]),
+                'markdown_input': self.server._document.text,
+                'html_result':    self.server._document.getHtml() + BOTTOM_PADDING,
+                'mail_style':     self.server._document.inline_css
                 }
 
     def do_GET(self):
@@ -81,14 +86,14 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         else:
             content = ''
             self.send_response(404)
-    
+
         self.send_header("Content-length", len(content))
         self.end_headers()
         self.wfile.write(content)
 
     def do_POST(self):
         length = int(self.headers.get('Content-Length'))
-        
+
         # Ajax update preview
         if self.path == '/ajaxUpdate':
             markdown_message = self.rfile.read(length).decode('utf-8')
@@ -103,22 +108,23 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             result_data = handler_func(self.server._document, request_data)
             self.wfile.write(result_data.encode('utf-8'))
             return
-            
+
         # Form submit action
         form_data = codecs.getreader('ascii')(self.rfile).read(length)
-        if sys.version_info[0]>2:
+        if sys.version_info[0] > 2:
             qs = dict(parse_qsl(form_data, True))
             markdown_input = qs['markdown_text']
         else:
             qs = dict(parse_qsl(str(form_data), True))
             markdown_input = qs['markdown_text'].decode('utf-8')
 
-        action = qs.get('SubmitAction','')
+        action = qs.get('SubmitAction', '')
         self.server._document.text = markdown_input
         self.server._document.form_data = qs
         print('action: '+action)
-        
-        action_handler = dict(self.server._in_actions).get(action) or dict(self.server._out_actions).get(action)
+
+        action_handler = dict(self.server._in_actions).get(action) or\
+        dict(self.server._out_actions).get(action)
 
         if action_handler:
             try:
@@ -415,7 +421,6 @@ def main():
     term_edit = options.pop('term_edit')
     markdown_processor = markdown.Markdown(**options)
     markdown_document = MarkdownDocument(infile=options['input'], outfile=options['output'], md=markdown_processor)
-
     # Run
     if term_edit:
         terminal_edit(markdown_document, default_action=options['term_action'])
