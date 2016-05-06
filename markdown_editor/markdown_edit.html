@@ -77,7 +77,7 @@
                 <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div>
                 <div class="checkbox">
                     <label>
-                      <input style="margin-left:0px;" type="checkbox" onchange="toggleVimMode(this)" />Vim mode
+                      <input id="vim-mode-toggle" style="margin-left:0px;" type="checkbox" onchange="toggleVimMode(this)" />&nbsp;Vim mode
                     </label>
                 </div></div>
             </div>
@@ -160,7 +160,8 @@
         // Set Focus on markdown input
         $('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
         myCodeMirror.focus()
-        
+
+        toggleVimMode($('#vim-mode-toggle')[0])
     </script>
 
 </html>
