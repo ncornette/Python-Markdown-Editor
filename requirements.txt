@@ -1,2 +1,2 @@
-Markdown==2.6.1
-Pygments==2.0.2
+Markdown
+Pygments
