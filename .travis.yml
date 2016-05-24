@@ -1,7 +1,7 @@
 language: python
 python:
   - "2.7"
-  - "3.2"
+#  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
@@ -14,7 +14,7 @@ install:
   - pip install -r requirements.txt codecov
 
 # command to run tests
-script: ./test_markdown_edit.py
+script: python ./test_markdown_edit.py
 
 after_success: python -m coverage run --source=markdown_editor test_markdown_edit.py && codecov
 
