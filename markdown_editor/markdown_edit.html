@@ -13,8 +13,8 @@
         <script>
             var myCodeMirror;
             function updateHtmlPreview() {
-                $.post( "ajaxUpdate", myCodeMirror.getValue())
-                    .done(function( data ) {$("#html_result").html(data)});
+               $$.post( "ajaxUpdate", myCodeMirror.getValue())
+                    .done(function( data ) {$$("#html_result").html(data)});
             }
             function updateMarkdownInput(value) {
                 myCodeMirror.setValue(value)
@@ -40,7 +40,7 @@
             box-shadow: none;
             position: relative;
             padding: 15px 15px 0px;
-            height:100%%;
+            height:100%;
             }
             
             #editor {
@@ -57,7 +57,7 @@
             box-sizing: border-box;
             }
 
-            %(mail_style)s
+            ${mail_style}
         </style>
         <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
         <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
@@ -70,11 +70,11 @@
         <form class="form-horizontal" method="post" action="/" name="markdown_input">
         <div style="position:fixed; top:0; bottom:0; left:0; right:0">
         
-        <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">%(html_head)s</div>
+        <div style="margin-top:15px; margin-left:15px; margin-right:15px" id="head">${html_head}</div>
 
-        <div id="mdedit" style="position: absolute; height:40px; width:100%%; top:0;" class="row">
+        <div id="mdedit" style="position: absolute; height:40px; width:100%; top:0;" class="row">
             <div class="col-sm-6">
-                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">%(in_actions)s</div>
+                <div style="margin:15px"  class="btn-toolbar"><div class="btn-group btn-group-sm">${in_actions}</div>
                 <div class="checkbox">
                     <label>
                       <input id="vim-mode-toggle" style="margin-left:0px;" type="checkbox" onchange="toggleVimMode(this)" />&nbsp;Vim mode
@@ -82,16 +82,16 @@
                 </div></div>
             </div>
             <div style="padding-left:0px" class="col-sm-6">
-                <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">%(out_actions)s</div></div>
+                <div style="margin:15px" class="btn-toolbar"><div class="btn-group btn-group-sm">${out_actions}</div></div>
             </div>
         </div>
 
         <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
-            <div style="height:100%%" class="col-sm-6">
-                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%%; height:100%%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">%(markdown_input)s</textarea>
+            <div style="height:100%" class="col-sm-6">
+                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%; height:100%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">${markdown_input}</textarea>
             </div>
-            <div style="height:100%%; padding-left:0px" class="col-sm-6">
-                <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%%">%(html_result)s</div>
+            <div style="height:100%; padding-left:0px" class="col-sm-6">
+                <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%">${html_result}</div>
             </div>
         </div>
         </div>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="progress progress-striped active">
-                        <div class="progress-bar" style="width: 100%%;"></div>
+                        <div class="progress-bar" style="width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -116,12 +116,12 @@
     <script>
         
         // Setup custom header height
-        head_height = $('#head').outerHeight(true)
-        $('#mdedit').css('top', head_height+'px')
-        $('#mdedit-body').css('top', (head_height+$('#mdedit').height())+'px')
+        head_height = $$('#head').outerHeight(true)
+        $$('#mdedit').css('top', head_height+'px')
+        $$('#mdedit-body').css('top', (head_height+$$('#mdedit').height())+'px')
 
         // Setup CodeMirror for markdown input
-        myCodeMirror = CodeMirror.fromTextArea($('#markdown_input')[0], {
+        myCodeMirror = CodeMirror.fromTextArea($$('#markdown_input')[0], {
             "value": "",
             "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
             "indentUnit": "4",
@@ -129,14 +129,14 @@
             "theme":"neat",
             "vimMode":false
             });
-        $(".CodeMirror").addClass("form-control")
-        $(".CodeMirror").addClass("focusedInput")
-        myCodeMirror.setSize("100%%","100%%")
+        $$(".CodeMirror").addClass("form-control")
+        $$(".CodeMirror").addClass("focusedInput")
+        myCodeMirror.setSize("100%","100%")
         myCodeMirror.on("keyup", updateHtmlPreview)
 
         // Setup scrollbars sync
         var s1 = myCodeMirror.display.scrollbarV
-        var s2 = $('#html_result')[0]
+        var s2 = $$('#html_result')[0]
 
         function select_scroll(e) {
             viewHeight = s2.getBoundingClientRect().height
@@ -158,10 +158,10 @@
         s1.addEventListener('scroll', select_scroll, false);
 
         // Set Focus on markdown input
-        $('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
+        $$('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
         myCodeMirror.focus()
 
-        toggleVimMode($('#vim-mode-toggle')[0])
+        toggleVimMode($$('#vim-mode-toggle')[0])
     </script>
 
 </html>
