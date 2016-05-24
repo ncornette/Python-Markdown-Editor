@@ -1,6 +1,8 @@
 Python-Markdown-Editor
 ======================
 
+[![Build Status](https://travis-ci.org/ncornette/Python-Markdown-Editor.svg?branch=master)](https://travis-ci.org/ncornette/Python-Markdown-Editor)
+
 Standalone editor for your markdown files
 
 ### Features
