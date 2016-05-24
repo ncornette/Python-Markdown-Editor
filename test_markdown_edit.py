@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 import os
 import unittest
 from markdown_editor.editor import MarkdownDocument
