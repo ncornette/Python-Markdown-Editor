@@ -229,8 +229,7 @@ class MarkdownDocument:
         """.format(self.inline_css, self.get_html())
 
 
-def read_input(input_file, encoding=None):
-    encoding = encoding or "utf-8"
+def read_input(input_file, encoding='utf-8'):
     text = ''
     # Read the source
     if input_file == '-':
@@ -252,8 +251,7 @@ def read_input(input_file, encoding=None):
     return text
 
 
-def write_output(output, text, encoding=None):
-    encoding = encoding or "utf-8"
+def write_output(output, text, encoding='utf-8'):
     # Write to file or stdout
     if output and output != '-':
         if isinstance(output, str):
