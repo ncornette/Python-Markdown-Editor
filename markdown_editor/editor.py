@@ -54,6 +54,7 @@ BOTTOM_PADDING = '<br />' * 2
 
 WebAppState = namedtuple('WebAppState', [
     'document',
+    'metadata',
     'new_line',
     'in_actions',
     'out_actions',
@@ -76,6 +77,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             in_actions='&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
             out_actions='&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
             markdown_input=self.server.app.document.text,
+            vim_mode=self.server.app.metadata.get('vim_mode') and 'checked' or '',
             html_result=self.server.app.document.get_html() + BOTTOM_PADDING,
             mail_style=self.server.app.document.inline_css)
 
@@ -130,6 +132,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         action = qs.get('SubmitAction', '')
         self.server.app.document.text = markdown_input
         self.server.app.document.form_data = qs
+        self.server.app.metadata['vim_mode'] = 'vim_mode' in qs
 
         print('QS keys: "{}"'.format('", "'.join(qs.keys())))
         print('SubmitAction: ' + action)
@@ -372,6 +375,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     app = WebAppState(
         document=doc,
+        metadata={'vim_mode': False},
         new_line=doc.detect_newline(),
         in_actions=default_actions,
         out_actions=actions,
