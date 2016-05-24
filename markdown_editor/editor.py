@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-
+import re
 import sys
 import os
 from os.path import join
@@ -125,6 +125,10 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
 
         action_handler = dict(self.server._in_actions).get(action) or\
         dict(self.server._out_actions).get(action)
+
+        if action_handler == action_save and self.server._new_line != '\r\n':
+            self.server._document.text = re.sub('\r\n', self.server._new_line,
+                                                self.server._document.text)
 
         if action_handler:
             try:
@@ -343,6 +347,12 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     httpd._running = True
     httpd._document = doc
+
+    httpd._new_line = os.linesep
+    new_line_match = re.search('\r\n|\r|\n', doc.text)
+    if new_line_match:
+        httpd._new_line = new_line_match.group()
+
     httpd._in_actions = default_actions
     httpd._out_actions = actions
     httpd._html_head = title or doc.input_file and '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>%s</span>' % os.path.basename(doc.input_file) or ''
