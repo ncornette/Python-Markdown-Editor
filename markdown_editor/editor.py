@@ -16,18 +16,10 @@ from subprocess import call
 import mimetypes
 
 if sys.version_info[0] < 3:
-    import SimpleHTTPServer
-    import SocketServer
     from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from SimpleHTTPServer import BaseHTTPServer
     from BaseHTTPServer import HTTPServer
     import urllib2
 else:
-    import http.server
-    import socketserver
-    import urllib.request
-    import urllib.error
-    import urllib.parse
     from http.server import SimpleHTTPRequestHandler
     from http.server import HTTPServer
     from urllib.parse import parse_qsl
@@ -309,7 +301,7 @@ def terminal_edit(doc = None, actions=[], default_action=None):
                 temp.truncate()
                 temp.flush()
             elif command[:1] == 'p':
-                webbrowser.open(temp.name)
+                webbrowser.open('file:///{}'.format(temp.name))
             elif command[:1] in action_funcs:
                 result, keep_running = action_funcs[command](doc)
 
