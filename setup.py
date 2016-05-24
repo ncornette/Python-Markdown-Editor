@@ -26,7 +26,7 @@ for data_dir in data_dirs:
 
 datafiles.extend(r.sub('', f) for f in data_files)
 
-setup(name='Python-Markdown-Editor',
+setup(name='Markdown-Editor',
       version='0.9.1',
       description='Standalone editor for your markdown files',
       long_description=long_description,
