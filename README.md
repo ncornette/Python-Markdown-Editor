@@ -2,6 +2,7 @@ Python-Markdown-Editor
 ======================
 
 [![Build Status](https://travis-ci.org/ncornette/Python-Markdown-Editor.svg?branch=master)](https://travis-ci.org/ncornette/Python-Markdown-Editor)
+[![PyPI](https://img.shields.io/pypi/v/Markdown-Editor.svg?maxAge=2592000)]()
 
 Standalone editor for your markdown files
 
