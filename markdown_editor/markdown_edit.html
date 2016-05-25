@@ -16,6 +16,9 @@
                $$.post( "ajaxUpdate", myCodeMirror.getValue())
                     .done(function( data ) {$$("#html_result").html(data)});
             }
+            function actionSaveFile() {
+               $$.post( "ajaxSave", myCodeMirror.getValue())
+            }
             function updateMarkdownInput(value) {
                 myCodeMirror.setValue(value)
             }
@@ -162,6 +165,13 @@
         myCodeMirror.focus()
 
         toggleVimMode($$('#vim-mode-toggle')[0])
+
+        $$(window).keypress(function(event) {
+            if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true;
+            actionSaveFile();
+            event.preventDefault();
+            return false;
+        });
     </script>
 
 </html>

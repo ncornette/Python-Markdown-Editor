@@ -55,7 +55,6 @@ BOTTOM_PADDING = '<br />' * 2
 WebAppState = namedtuple('WebAppState', [
     'document',
     'metadata',
-    'new_line',
     'in_actions',
     'out_actions',
     'html_head',
@@ -117,7 +116,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             request_data = self.rfile.read(length).decode('utf-8')
             handler_func = self.server.app.ajax_handlers.get(self.path)
             result_data = handler_func(self.server.app.document, request_data)
-            self.wfile.write(result_data.encode('utf-8'))
+            if result_data:
+                self.wfile.write(result_data.encode('utf-8'))
             return
 
         # Form submit action
@@ -139,10 +139,6 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
 
         action_handler = dict(self.server.app.in_actions).get(action) or \
                          dict(self.server.app.out_actions).get(action)
-
-        if action_handler == action_save and self.server.app.new_line != '\r\n':
-            self.server.app.document.text = re.sub('\r\n', self.server.app.new_line,
-                                                   self.server.app.document.text)
 
         if action_handler:
             try:
@@ -184,6 +180,7 @@ class MarkdownDocument:
         self.output_file = outfile
         initial_markdown = mdtext and mdtext or read_input(self.input_file)
         self.inline_css = ''
+        self.newline_update = None
 
         if markdown_css:
             with open(markdown_css) as markdown_css_file:
@@ -201,11 +198,17 @@ class MarkdownDocument:
         self.text = initial_markdown
         self.form_data = {}  # used by clients to handle custom form actions
 
+    def fix_crlf_input_text(self):
+        if self.newline_update and self.newline_update != '\r\n':
+            self.text = re.sub('\r\n', self.newline_update, self.text)
+
     def detect_newline(self):
         new_line_match = re.search('\r\n|\r|\n', self.text)
         if new_line_match:
-            return new_line_match.group()
-        return os.linesep
+            self.newline_update = new_line_match.group()
+        else:
+            self.newline_update = os.linesep
+        return self.newline_update
 
     def get_html(self):
         return self.md.convert(self.text)
@@ -277,6 +280,7 @@ def action_preview(document):
 
 
 def action_save(document):
+    document.fix_crlf_input_text()
     input_file = document.input_file
     output_file = document.output_file
     result = document.get_html_page()
@@ -287,6 +291,12 @@ def action_save(document):
     if input_file:
         write_output(input_file, document.text)
     return None, True
+
+
+def ajax_save(document, data):
+    document.text = data
+    action_save(document)
+    return None
 
 
 def sys_edit(markdown_document, editor=None):
@@ -358,6 +368,9 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     if doc.input_file or doc.output_file:
         default_actions.insert(0, ('Save', action_save))
+        ajax_handlers.setdefault('/ajaxSave', ajax_save)
+
+    doc.detect_newline()
 
     httpd = HTTPServer(("", port), EditorRequestHandler)
 
@@ -374,7 +387,6 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
     app = WebAppState(
         document=doc,
         metadata={'vim_mode': False},
-        new_line=doc.detect_newline(),
         in_actions=default_actions,
         out_actions=actions,
         html_head=html_head,
