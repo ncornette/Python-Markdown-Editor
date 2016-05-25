@@ -1,1 +1,9 @@
 *.pyc
+build
+dist
+venv*
+.coverage
+.idea
+htmlcov/
+*.iml
+*.egg-info/
