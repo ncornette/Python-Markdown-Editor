@@ -6,8 +6,9 @@ from os import path
 
 from setuptools import setup
 from pip.req import parse_requirements
+from pip.download import PipSession
 
-install_reqs = parse_requirements('./requirements.txt', session=False)
+install_reqs = parse_requirements('requirements.txt', session=PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
 here = path.abspath(path.dirname(__file__))
