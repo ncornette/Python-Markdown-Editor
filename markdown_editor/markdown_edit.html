@@ -12,12 +12,14 @@
         <link href="libs/codemirror-4.6.0/theme/3024-night.css" rel="stylesheet">
         <script>
             var myCodeMirror;
-            function updateHtmlPreview() {
-               $$.post( "ajaxUpdate", myCodeMirror.getValue())
+            function ajaxUpdatePreview() {
+               $$.post( "ajaxPreview", myCodeMirror.getValue())
                     .done(function( data ) {$$("#html_result").html(data)});
             }
-            function actionSaveFile() {
+            function ajaxSaveFile() {
+               $$('#pleaseWaitDialog').modal('show')
                $$.post( "ajaxSave", myCodeMirror.getValue())
+                    .done(function(data) {$$('#pleaseWaitDialog').modal('hide')})
             }
             function updateMarkdownInput(value) {
                 myCodeMirror.setValue(value)
@@ -91,7 +93,7 @@
 
         <div id="mdedit-body" style="padding:15px; position: absolute; top:0; bottom:0; left:0; right:0" class="row">
             <div style="height:100%" class="col-sm-6">
-                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%; height:100%" class="form-control" onKeyUp="updateHtmlPreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">${markdown_input}</textarea>
+                <textarea style="font-family: monospace; font-size: small; color:#222; width:100%; height:100%" class="form-control" onKeyUp="ajaxUpdatePreview()" id="markdown_input" cols="80" rows="30" name="markdown_text">${markdown_input}</textarea>
             </div>
             <div style="height:100%; padding-left:0px" class="col-sm-6">
                 <div class="html-output markdown-body" id="html_result" style="overflow: auto; height:100%">${html_result}</div>
@@ -124,6 +126,7 @@
         $$('#mdedit-body').css('top', (head_height+$$('#mdedit').height())+'px')
 
         // Setup CodeMirror for markdown input
+        CodeMirror.commands.save = function(instance) {ajaxSaveFile();}
         myCodeMirror = CodeMirror.fromTextArea($$('#markdown_input')[0], {
             "value": "",
             "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
@@ -135,7 +138,7 @@
         $$(".CodeMirror").addClass("form-control")
         $$(".CodeMirror").addClass("focusedInput")
         myCodeMirror.setSize("100%","100%")
-        myCodeMirror.on("keyup", updateHtmlPreview)
+        myCodeMirror.on("change", function(instance, changeObj) {ajaxUpdatePreview();})
 
         // Setup scrollbars sync
         var s1 = myCodeMirror.display.scrollbarV
@@ -166,12 +169,6 @@
 
         toggleVimMode($$('#vim-mode-toggle')[0])
 
-        $$(window).keypress(function(event) {
-            if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true;
-            actionSaveFile();
-            event.preventDefault();
-            return false;
-        });
     </script>
 
 </html>

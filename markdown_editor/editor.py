@@ -103,22 +103,18 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get('Content-Length'))
 
-        # Ajax update preview
-        if self.path == '/ajaxUpdate':
-            markdown_message = self.rfile.read(length).decode('utf-8')
-            self.server.app.document.text = markdown_message
-            self.wfile.write(
-                self.server.app.document.get_html().encode('utf-8') + BOTTOM_PADDING.encode('utf-8'))
-            return
-
         # Ajax action handler
-        if self.path in self.server.app.ajax_handlers:
-            request_data = self.rfile.read(length).decode('utf-8')
-            handler_func = self.server.app.ajax_handlers.get(self.path)
-            result_data = handler_func(self.server.app.document, request_data)
+        path_name = self.path[1:]
+        if path_name in self.server.app.ajax_handlers:
+            print('ajax action: {}'.format(path_name))
+            markdown_text = self.rfile.read(length).decode('utf-8')
+            handler_func = self.server.app.ajax_handlers.get(path_name)
+            result_data = handler_func(self.server.app.document, markdown_text)
             if result_data:
                 self.wfile.write(result_data.encode('utf-8'))
             return
+        else:
+            print('unknown ajax action: {}'.format(path_name))
 
         # Form submit action
         form_data = codecs.getreader('ascii')(self.rfile).read(length)
@@ -296,7 +292,12 @@ def action_save(document):
 def ajax_save(document, data):
     document.text = data
     action_save(document)
-    return None
+    return 'OK'
+
+
+def ajax_preview(document, data):
+    document.text = data
+    return document.get_html().encode('utf-8') + BOTTOM_PADDING.encode('utf-8')
 
 
 def sys_edit(markdown_document, editor=None):
@@ -368,7 +369,9 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     if doc.input_file or doc.output_file:
         default_actions.insert(0, ('Save', action_save))
-        ajax_handlers.setdefault('/ajaxSave', ajax_save)
+        ajax_handlers.setdefault('ajaxSave', ajax_save)
+
+    ajax_handlers.setdefault('ajaxPreview', ajax_preview)
 
     doc.detect_newline()
 
