@@ -306,7 +306,7 @@ def ajax_preview(document, data):
 def ajax_vim_mode(document, data, metadata):
     metadata.update(json.loads(data))
     print(metadata)
-    return None
+    return 'OK'
 
 
 def sys_edit(markdown_document, editor=None):
