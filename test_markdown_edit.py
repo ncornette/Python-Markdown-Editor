@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import os
 import unittest
 from markdown_editor.editor import MarkdownDocument
-
 
 class MyTestCase(unittest.TestCase):
 
@@ -12,6 +12,9 @@ class MyTestCase(unittest.TestCase):
 
     def test_document_html_page(self):
         self.assertIn('<h3>Spam</h3>', MarkdownDocument('### Spam').get_html_page())
+
+    def test_document_html_page_unicode(self):
+        self.assertIn('<h3>Spam é</h3>', MarkdownDocument('### Spam é', 'utf-8').get_html_page())
 
     def test_detect_newline(self):
         self.assertEqual(os.linesep, MarkdownDocument('### Spam').detect_newline())

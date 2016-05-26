@@ -25,6 +25,7 @@ if sys.version_info[0] < 3:
     from SimpleHTTPServer import SimpleHTTPRequestHandler
     from BaseHTTPServer import HTTPServer
     import urllib2
+    parse_qsl = urllib2.urlparse.parse_qsl
 else:
     from http.server import SimpleHTTPRequestHandler
     from http.server import HTTPServer
@@ -33,7 +34,6 @@ else:
 if sys.version_info[0] < 3:
     text_type = unicode
     binary_type = str
-    parse_qsl = urllib2.urlparse.parse_qsl
 else:
     text_type = str
     binary_type = bytes
@@ -48,12 +48,13 @@ sys.path.append(scriptdir)
 MARKDOWN_EXT = ('codehilite', 'extra', 'strikethrough')
 MARKDOWN_CSS = join(scriptdir, 'styles/markdown.css')
 PYGMENTS_CSS = join(scriptdir, 'styles/pygments.css')
-ACTION_TEMPLATE = """<input \
+ACTION_TEMPLATE = text_type("""<input \
         type="submit" class="btn btn-default" \
         name="SubmitAction" value="{}" \
-        onclick="$('#pleaseWaitDialog').modal('show')">"""
-PAGE_HEADER_TEMPLATE = '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>'
-BOTTOM_PADDING = '<br />' * 2
+        onclick="$('#pleaseWaitDialog').modal('show')">""")
+PAGE_HEADER_TEMPLATE = text_type(
+        '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>')
+BOTTOM_PADDING = text_type('<br />' * 2)
 
 WebAppState = namedtuple('WebAppState', [
     'document',
@@ -76,8 +77,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def get_html_content(self):
         return self.template.substitute(
             html_head=callable(self.server.app.html_head) and self.server.app.html_head() or self.server.app.html_head,
-            in_actions='&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
-            out_actions='&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
+            in_actions=text_type('&nbsp;').join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
+            out_actions=text_type('&nbsp;').join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
             markdown_input=self.server.app.document.text,
             vim_mode=self.server.app.metadata.get('vim_mode') and 'checked' or '',
             html_result=self.server.app.document.get_html() + BOTTOM_PADDING,
@@ -92,7 +93,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", mimetypes.guess_type(self.path)[0])
         elif self.path == '/':
-            content = self.get_html_content().encode('utf-8')
+            content = self.get_html_content().encode('utf8')
             self.send_response(200)
             self.send_header("Content-type", "text/html")
         else:
@@ -110,11 +111,11 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         path_name = self.path[1:]
         if path_name in self.server.app.ajax_handlers:
             print('ajax post action: {}'.format(path_name))
-            markdown_text = self.rfile.read(length).decode('utf-8')
+            markdown_text = self.rfile.read(length).decode('utf8')
             handler_func = self.server.app.ajax_handlers.get(path_name)
             result_data = handler_func(self.server.app.document, markdown_text)
             if result_data:
-                self.wfile.write(result_data.encode('utf-8'))
+                self.wfile.write(result_data.encode('utf8'))
             return
 
         # Form submit action
@@ -124,8 +125,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             markdown_input = qs['markdown_text']
         else:
             qs = dict(parse_qsl(str(form_data), True))
-            markdown_input = qs['markdown_text'].decode('utf-8')
-
+            markdown_input = qs['markdown_text'].decode('utf8')
         action = qs.get('SubmitAction', '')
         self.server.app.document.text = markdown_input
         self.server.app.document.form_data = qs
@@ -143,25 +143,25 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 tb = traceback.format_exc()
                 print(tb)
-                footer = '<a href="/">Continue editing</a>'
-                content = '<html><body><h4>{}</h4><pre>{}</pre>\n{}</body></html>'.format(
-                    e.message, tb, footer)
+                footer = text_type('<a href="/">Continue editing</a>')
+                content = text_type('<html><body><h4>{}</h4><pre>{}</pre>\n{}</body></html>')\
+                    .format(e.message, tb, footer)
                 keep_running = True
 
             if content:
-                content = codecs.encode(content, 'utf-8')
+                content = content.encode('utf8')
                 self.send_response(200)
-                self.send_header("Content-type", "text/html")
+                self.send_header('Content-type', 'text/html')
                 if not keep_running:
                     self.server.app = None
             else:
-                content = codecs.encode('', 'utf-8')
+                content = ''.encode('utf8')
                 self.send_response(302)
                 self.send_header('Location', '/')
                 if not keep_running:
                     self.server.app = None
         else:
-            content = codecs.encode('', 'utf-8')
+            content = binary_type('')
             self.send_response(302)
             self.send_header('Location', '/')
 
@@ -176,15 +176,15 @@ class MarkdownDocument:
         self.input_file = infile
         self.output_file = outfile
         initial_markdown = mdtext and mdtext or read_input(self.input_file)
-        self.inline_css = ''
+        self.inline_css = text_type('')
         self.newline_update = None
 
         if markdown_css:
-            with open(markdown_css) as markdown_css_file:
+            with codecs.open(markdown_css, 'r', 'utf8') as markdown_css_file:
                 self.inline_css += markdown_css_file.read()
 
         if pygments_css:
-            with open(pygments_css) as pygments_css_file:
+            with codecs.open(pygments_css, 'r', 'utf8') as pygments_css_file:
                 self.inline_css += pygments_css_file.read()
 
         if not md:
@@ -211,7 +211,7 @@ class MarkdownDocument:
         return self.md.convert(self.text)
 
     def get_html_page(self):
-        return """\
+        return text_type("""\
         <!DOCTYPE html>
         <html>
         <head>
@@ -226,24 +226,22 @@ class MarkdownDocument:
         </div>
         </body>
         </html>
-        """.format(self.inline_css, self.get_html())
+        """).format(self.inline_css, self.get_html())
 
 
-def read_input(input_file, encoding='utf-8'):
+def read_input(input_file, encoding='utf8'):
     text = ''
     # Read the source
     if input_file == '-':
-        text = sys.stdin.read()
-        if not isinstance(text, str):
-            text = text.decode(encoding)
+        text = codecs.getreader('utf8')(sys.stdin, errors="xmlcharrefreplace").read()
     elif input_file:
         if isinstance(input_file, str):
             if not os.path.exists(input_file):
-                with open(input_file, mode='w'):
+                with codecs.open(input_file, mode='w'):
                     pass
-            input_file = codecs.open(input_file, mode="rb", encoding=encoding)
+            input_file = codecs.open(input_file, 'rb', encoding, errors="xmlcharrefreplace")
         else:
-            input_file = codecs.getreader(encoding)(input_file)
+            input_file = codecs.getreader(encoding)(input_file, errors="xmlcharrefreplace")
         text = input_file.read()
         input_file.close()
 
@@ -251,7 +249,7 @@ def read_input(input_file, encoding='utf-8'):
     return text
 
 
-def write_output(output, text, encoding='utf-8'):
+def write_output(output, text, encoding='utf8'):
     # Write to file or stdout
     if output and output != '-':
         if isinstance(output, str):
@@ -293,28 +291,33 @@ def action_save(document):
 def ajax_save(document, data):
     document.text = data
     action_save(document)
-    return 'OK'
+    return text_type('OK')
 
 
 def ajax_preview(document, data):
     document.text = data
-    return document.get_html().encode('utf-8') + BOTTOM_PADDING.encode('utf-8')
+    return document.get_html() + BOTTOM_PADDING
 
 
 def ajax_vim_mode(document, data, metadata):
     metadata.update(json.loads(data))
-    print(metadata)
-    return 'OK'
+    return text_type('OK')
 
 
 def sys_edit(markdown_document, editor=None):
     use_editor = editor or SYS_EDITOR
-    with tempfile.NamedTemporaryFile(mode='r+', suffix=".markdown") as temp:
-        temp.write(markdown_document.text.encode('utf-8'))
+    with tempfile.NamedTemporaryFile(mode='r+', suffix=".markdown") as f:
+        if sys.version_info[0] < 3:
+            temp = codecs.getwriter('utf8')(f)
+            tempr = codecs.getreader('utf8')(f)
+        else:
+            temp = f
+            tempr = f
+        temp.write(markdown_document.text)
         temp.flush()
         call([use_editor, temp.name])
         temp.seek(0)
-        markdown_document.text = temp.read().decode('utf-8')
+        markdown_document.text = tempr.read()
     return markdown_document
 
 
@@ -332,8 +335,12 @@ def terminal_edit(doc=None, actions=[], default_action=None):
     actions_prompt = [a[2] + ' : ' + a[0] for a in all_actions]
 
     keep_running = True
-    with tempfile.NamedTemporaryFile(mode='r+', suffix=".html") as temp:
-        temp.write(doc.get_html_page().encode('utf-8'))
+    with tempfile.NamedTemporaryFile(mode='r+', suffix=".html") as f:
+        if sys.version_info[0] < 3:
+            temp = codecs.getwriter('utf8')(f)
+        else:
+            temp = f
+        temp.write(doc.get_html_page())
         temp.flush()
         while keep_running:
             command = default_action or raw_input('''Choose command :\n\n{}\n?: '''.format(
@@ -342,7 +349,7 @@ def terminal_edit(doc=None, actions=[], default_action=None):
             default_action = None
             if command[:1] == 'e':
                 temp.seek(0)
-                temp.write(sys_edit(doc).get_html_page().encode('utf-8'))
+                temp.write(sys_edit(doc).get_html_page())
                 temp.truncate()
                 temp.flush()
             elif command[:1] == 'p':
@@ -412,7 +419,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
         httpd.handle_request()
 
 
-def parse_options():
+def parse_options():  # pragma: no cover
     """
     Define and parse `optparse` options for command-line usage.
     """
@@ -482,7 +489,7 @@ def parse_options():
             'lazy_ol': options.lazy_ol}, options.verbose
 
 
-def main():
+def main():  # pragma: no cover
     """Run Markdown from the command line."""
 
     # Parse options and adjust logging level if necessary
