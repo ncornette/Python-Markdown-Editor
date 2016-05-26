@@ -19,10 +19,13 @@
             function ajaxSaveFile() {
                $$('#pleaseWaitDialog').modal('show')
                $$.post( "ajaxSave", myCodeMirror.getValue())
-                    .done(function(data) {$$('#pleaseWaitDialog').modal('hide')})
+                    .done(function(data) {$$('#pleaseWaitDialog').modal('hide')});
+            }
+            function ajaxVimMode(value) {
+               $$.post( "ajaxVimMode", JSON.stringify({vim_mode: value}));
             }
             function updateMarkdownInput(value) {
-                myCodeMirror.setValue(value)
+                myCodeMirror.setValue(value);
             }
         </script>
         <style>
@@ -154,9 +157,11 @@
             if (e.checked) {
                 myCodeMirror.setOption('theme', '3024-night')
                 myCodeMirror.setOption('vimMode', true)
+                ajaxVimMode(true)
             } else {
                 myCodeMirror.setOption('theme', 'neat')
                 myCodeMirror.setOption('vimMode', false)
+                ajaxVimMode(false)
             }
             myCodeMirror.focus()
         }

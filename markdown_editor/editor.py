@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import json
 import re
 import sys
 import os
 from collections import namedtuple
+from functools import partial
 from os.path import join
 from string import Template
 
@@ -300,6 +303,12 @@ def ajax_preview(document, data):
     return document.get_html().encode('utf-8') + BOTTOM_PADDING.encode('utf-8')
 
 
+def ajax_vim_mode(document, data, metadata):
+    metadata.update(json.loads(data))
+    print(metadata)
+    return None
+
+
 def sys_edit(markdown_document, editor=None):
     use_editor = editor or SYS_EDITOR
     with tempfile.NamedTemporaryFile(mode='r+', suffix=".markdown") as temp:
@@ -364,6 +373,8 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     default_actions = [('Preview', action_preview), ('Close', action_close)]
 
+    metadata = {'vim_mode': False}
+
     if not doc:
         doc = MarkdownDocument()
 
@@ -372,6 +383,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
         ajax_handlers.setdefault('ajaxSave', ajax_save)
 
     ajax_handlers.setdefault('ajaxPreview', ajax_preview)
+    ajax_handlers.setdefault('ajaxVimMode', partial(ajax_vim_mode, metadata=metadata))
 
     doc.detect_newline()
 
@@ -389,7 +401,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     app = WebAppState(
         document=doc,
-        metadata={'vim_mode': False},
+        metadata=metadata,
         in_actions=default_actions,
         out_actions=actions,
         html_head=html_head,
