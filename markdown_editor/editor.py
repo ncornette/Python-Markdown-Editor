@@ -109,15 +109,13 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         # Ajax action handler
         path_name = self.path[1:]
         if path_name in self.server.app.ajax_handlers:
-            print('ajax action: {}'.format(path_name))
+            print('ajax post action: {}'.format(path_name))
             markdown_text = self.rfile.read(length).decode('utf-8')
             handler_func = self.server.app.ajax_handlers.get(path_name)
             result_data = handler_func(self.server.app.document, markdown_text)
             if result_data:
                 self.wfile.write(result_data.encode('utf-8'))
             return
-        else:
-            print('unknown ajax action: {}'.format(path_name))
 
         # Form submit action
         form_data = codecs.getreader('ascii')(self.rfile).read(length)
@@ -133,8 +131,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
         self.server.app.document.form_data = qs
         self.server.app.metadata['vim_mode'] = 'vim_mode' in qs
 
+        print('form submit post action: {}'.format(action))
         print('QS keys: "{}"'.format('", "'.join(qs.keys())))
-        print('SubmitAction: ' + action)
 
         action_handler = dict(self.server.app.in_actions).get(action) or \
                          dict(self.server.app.out_actions).get(action)
