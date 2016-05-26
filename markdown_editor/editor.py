@@ -48,13 +48,12 @@ sys.path.append(scriptdir)
 MARKDOWN_EXT = ('codehilite', 'extra', 'strikethrough')
 MARKDOWN_CSS = join(scriptdir, 'styles/markdown.css')
 PYGMENTS_CSS = join(scriptdir, 'styles/pygments.css')
-ACTION_TEMPLATE = text_type("""<input \
+ACTION_TEMPLATE = u"""<input \
         type="submit" class="btn btn-default" \
         name="SubmitAction" value="{}" \
-        onclick="$('#pleaseWaitDialog').modal('show')">""")
-PAGE_HEADER_TEMPLATE = text_type(
-        '&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>')
-BOTTOM_PADDING = text_type('<br />' * 2)
+        onclick="$('#pleaseWaitDialog').modal('show')">"""
+PAGE_HEADER_TEMPLATE = u'&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>'
+BOTTOM_PADDING = u'<br />' * 2
 
 WebAppState = namedtuple('WebAppState', [
     'document',
@@ -77,8 +76,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def get_html_content(self):
         return self.template.substitute(
             html_head=callable(self.server.app.html_head) and self.server.app.html_head() or self.server.app.html_head,
-            in_actions=text_type('&nbsp;').join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
-            out_actions=text_type('&nbsp;').join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
+            in_actions=u'&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
+            out_actions=u'&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
             markdown_input=self.server.app.document.text,
             vim_mode=self.server.app.metadata.get('vim_mode') and 'checked' or '',
             html_result=self.server.app.document.get_html() + BOTTOM_PADDING,
@@ -143,8 +142,8 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 tb = traceback.format_exc()
                 print(tb)
-                footer = text_type('<a href="/">Continue editing</a>')
-                content = text_type('<html><body><h4>{}</h4><pre>{}</pre>\n{}</body></html>')\
+                footer = u'<a href="/">Continue editing</a>'
+                content = u'<html><body><h4>{}</h4><pre>{}</pre>\n{}</body></html>'\
                     .format(e.message, tb, footer)
                 keep_running = True
 
@@ -161,7 +160,7 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
                 if not keep_running:
                     self.server.app = None
         else:
-            content = binary_type('')
+            content = b''
             self.send_response(302)
             self.send_header('Location', '/')
 
@@ -176,7 +175,7 @@ class MarkdownDocument:
         self.input_file = infile
         self.output_file = outfile
         initial_markdown = mdtext and mdtext or read_input(self.input_file)
-        self.inline_css = text_type('')
+        self.inline_css = u''
         self.newline_update = None
 
         if markdown_css:
@@ -211,7 +210,7 @@ class MarkdownDocument:
         return self.md.convert(self.text)
 
     def get_html_page(self):
-        return text_type("""\
+        return u"""\
         <!DOCTYPE html>
         <html>
         <head>
@@ -226,7 +225,7 @@ class MarkdownDocument:
         </div>
         </body>
         </html>
-        """).format(self.inline_css, self.get_html())
+        """.format(self.inline_css, self.get_html())
 
 
 def read_input(input_file, encoding='utf8'):
@@ -291,7 +290,7 @@ def action_save(document):
 def ajax_save(document, data):
     document.text = data
     action_save(document)
-    return text_type('OK')
+    return u'OK'
 
 
 def ajax_preview(document, data):
@@ -301,7 +300,7 @@ def ajax_preview(document, data):
 
 def ajax_vim_mode(document, data, metadata):
     metadata.update(json.loads(data))
-    return text_type('OK')
+    return u'OK'
 
 
 def sys_edit(markdown_document, editor=None):
