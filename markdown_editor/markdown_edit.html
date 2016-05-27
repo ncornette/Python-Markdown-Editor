@@ -16,6 +16,8 @@
             var requestSend = false;
             var isSending = false;
 
+            // Preventing Simultaneous ajax requests
+            // http://stackoverflow.com/a/8571903/3453164
             function ajaxUpdatePreview() {
                 requestSend = true;
                 tryAjaxUpdatePreview();
