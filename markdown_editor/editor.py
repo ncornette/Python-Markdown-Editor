@@ -207,7 +207,7 @@ class MarkdownDocument:
         return self.newline_update
 
     def get_html(self):
-        return self.md.convert(self.text)
+        return self.md.reset().convert(self.text)
 
     def get_html_page(self):
         return u"""\
