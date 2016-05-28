@@ -14,7 +14,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 data_dirs = ['markdown_editor/libs', 'markdown_editor/styles']
