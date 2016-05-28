@@ -5,7 +5,24 @@ Python-Markdown-Editor
 [![PyPI](https://img.shields.io/pypi/pyversions/Markdown-Editor.svg?maxAge=2592000)]()
 [![PyPI](https://img.shields.io/pypi/v/Markdown-Editor.svg?maxAge=2592000)]()
 
-Standalone editor for your markdown files
+Standalone editor for your local markdown files
+
+### Installation
+
+To install the latest stable version from Pypi : 
+```sh
+$ pip install markdown-editor
+```
+
+### Usage
+
+```sh
+$ markdown_edit README.md
+```
+It will open the editor in your browser :
+
+![screenshot](https://github.com/ncornette/Python-Markdown-Editor/raw/master/screenshot.png)
+
 
 ### Features
  - Side-by-side markdown editor & html preview
@@ -13,27 +30,22 @@ Standalone editor for your markdown files
  - Codehilite & markdown extra syntax support by default
  - Github syntax support 
  - Github styles for rendering and codehilite
-
-![screenshot](https://github.com/ncornette/Python-Markdown-Editor/raw/master/screenshot.png)
+ - Scrollbars sync
 
 ### Dependencies
- - Python-Markdown
+ - markdown
+ - pygments
 
-### Usage
+### Other usage examples
 
-Launch editor for testing :
+Launch editor without input file for testing :
 ```bash
-$ markdown_edit.py 
+$ markdown_edit 
 ```
 
-Edit existing markdown file for preview :
+Edit markdown file and save both markdown and html outputs :
 ```bash
-$ markdown_edit.py readme.md
-```
-
-Edit existing markdown file and save html output file :
-```bash
-$ markdown_edit.py -f readme.html readme.md
+$ markdown_edit -f README.html README.md
 ```
 
 ### Extensible
