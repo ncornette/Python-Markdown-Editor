@@ -2,8 +2,8 @@ Python-Markdown-Editor
 ======================
 
 [![Build Status](https://travis-ci.org/ncornette/Python-Markdown-Editor.svg?branch=master)](https://travis-ci.org/ncornette/Python-Markdown-Editor)
-[![PyPI](https://img.shields.io/pypi/pyversions/Markdown-Editor.svg?maxAge=2592000)]()
-[![PyPI](https://img.shields.io/pypi/v/Markdown-Editor.svg?maxAge=2592000)]()
+[![PyPI](https://img.shields.io/pypi/pyversions/Markdown-Editor.svg?maxAge=2592000)](https://pypi.python.org/pypi/Markdown-Editor)
+[![PyPI](https://img.shields.io/pypi/v/Markdown-Editor.svg?maxAge=2592000)](https://pypi.python.org/pypi/Markdown-Editor)
 
 Standalone editor for your local markdown files
 
