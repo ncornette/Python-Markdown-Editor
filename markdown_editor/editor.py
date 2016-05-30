@@ -238,11 +238,11 @@ def read_input(input_file, encoding='utf8'):
             if not os.path.exists(input_file):
                 with codecs.open(input_file, mode='w'):
                     pass
-            input_file = codecs.open(input_file, 'rb', encoding, errors="xmlcharrefreplace")
+            with codecs.open(input_file, 'rb', encoding, errors="xmlcharrefreplace") as f:
+                text = f.read()
         else:
             input_file = codecs.getreader(encoding)(input_file, errors="xmlcharrefreplace")
-        text = input_file.read()
-        input_file.close()
+            text = input_file.read()
 
     text = text.lstrip('\ufeff')  # remove the byte-order mark
     return text
@@ -252,9 +252,8 @@ def write_output(output, text, encoding='utf8'):
     # Write to file or stdout
     if output and output != '-':
         if isinstance(output, str):
-            output_file = codecs.open(output, "w", encoding=encoding, errors="xmlcharrefreplace")
-            output_file.write(text)
-            output_file.close()
+            with codecs.open(output, "w", encoding=encoding, errors="xmlcharrefreplace") as f:
+                f.write(text)
         else:
             writer = codecs.getwriter(encoding)
             output_file = writer(output, errors="xmlcharrefreplace")
