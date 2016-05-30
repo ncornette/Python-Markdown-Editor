@@ -277,11 +277,10 @@ def action_save(document):
     document.fix_crlf_input_text()
     input_file = document.input_file
     output_file = document.output_file
-    result = document.get_html_page()
 
     # Save files if defined
     if output_file:
-        write_output(output_file, result)
+        write_output(output_file, document.get_html_page())
     if input_file:
         write_output(input_file, document.text)
     return None, True
