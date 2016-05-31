@@ -7,9 +7,10 @@
         <title>Markdown Editor</title>
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap.css" rel="stylesheet">
         <link href="libs/bootstrap-3.1.1-dist/css/bootstrap-theme.css" rel="stylesheet">
-        <link href="libs/codemirror-4.6.0/codemirror.css" rel="stylesheet">
-        <link href="libs/codemirror-4.6.0/theme/neat.css" rel="stylesheet">
-        <link href="libs/codemirror-4.6.0/theme/3024-night.css" rel="stylesheet">
+        <link href="libs/codemirror-5.15.2/codemirror.css" rel="stylesheet">
+        <link href="libs/codemirror-5.15.2/theme/neat.css" rel="stylesheet">
+        <link href="libs/codemirror-5.15.2/theme/3024-night.css" rel="stylesheet">
+        <link href="libs/codemirror-5.15.2/addon/dialog/dialog.css" rel="stylesheet">
         <script>
             var myCodeMirror;
 
@@ -48,6 +49,10 @@
             }
         </script>
         <style>
+            .CodeMirror {
+                font-size: medium;
+            }
+
             .focusedInput {
             border-color: #ccc;
             border-color: rgba(82,168,236,.8);
@@ -88,9 +93,10 @@
         </style>
         <script src="libs/jquery-1.11.0-dist/jquery-1.11.0.js"></script>
         <script src="libs/bootstrap-3.1.1-dist/js/bootstrap.js"></script>
-        <script src="libs/codemirror-4.6.0/codemirror.js"></script>
-        <script src="libs/codemirror-4.6.0/mode/markdown.js"></script>
-        <script src="libs/codemirror-4.6.0/keymap/vim.js"></script>
+        <script src="libs/codemirror-5.15.2/codemirror.js"></script>
+        <script src="libs/codemirror-5.15.2/mode/markdown.js"></script>
+        <script src="libs/codemirror-5.15.2/keymap/vim.js"></script>
+        <script src="libs/codemirror-5.15.2/addon/dialog/dialog.js"></script>
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
@@ -149,13 +155,13 @@
 
         // Setup CodeMirror for markdown input
         CodeMirror.commands.save = function(instance) {ajaxSaveFile();}
-        myCodeMirror = CodeMirror.fromTextArea($$('#markdown_input')[0], {
-            "value": "",
-            "mode":  {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
-            "indentUnit": "4",
-            "showCursorWhenSelecting": true,
-            "theme":"neat",
-            "vimMode":false
+        var myCodeMirror = CodeMirror.fromTextArea(document.getElementById('markdown_input'), {
+            value: "",
+            mode: {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
+            indentUnit: "4",
+            showCursorWhenSelecting: true,
+            theme: "neat",
+            vimMode: false
             });
         $$(".CodeMirror").addClass("form-control")
         $$(".CodeMirror").addClass("focusedInput")
@@ -163,7 +169,7 @@
         myCodeMirror.on("change", function(instance, changeObj) {ajaxUpdatePreview();})
 
         // Setup scrollbars sync
-        var s1 = myCodeMirror.display.scrollbarV
+        var s1 = myCodeMirror.display.scrollbars.vert
         var s2 = $$('#html_result')[0]
 
         function select_scroll(e) {
@@ -189,9 +195,8 @@
 
         // Set Focus on markdown input
         $$('#pleaseWaitDialog').on('hidden.bs.modal', function () {myCodeMirror.focus()})
-        myCodeMirror.focus()
 
-        toggleVimMode($$('#vim-mode-toggle')[0])
+        toggleVimMode(document.getElementById('vim-mode-toggle'))
 
     </script>
 

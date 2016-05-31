@@ -274,14 +274,13 @@ def action_preview(document):
 
 def action_save(document):
     document.fix_crlf_input_text()
-    input_file = document.input_file
-    output_file = document.output_file
 
-    # Save files if defined
-    if output_file:
-        write_output(output_file, document.get_html_page())
-    if input_file:
-        write_output(input_file, document.text)
+    if document.output_file:
+        write_output(document.output_file, document.get_html_page())
+
+    if document.input_file:
+        write_output(document.input_file, document.text)
+
     return None, True
 
 
@@ -504,7 +503,6 @@ def main():  # pragma: no cover
         terminal_edit(markdown_document, default_action=options['term_action'])
     else:
         web_edit(markdown_document, port=options['port'])
-
 
 if __name__ == '__main__':
     main()
