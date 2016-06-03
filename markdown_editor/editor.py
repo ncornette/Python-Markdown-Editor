@@ -5,7 +5,7 @@ import json
 import re
 import sys
 import os
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from functools import partial
 from os.path import join
 from string import Template
@@ -52,6 +52,10 @@ ACTION_TEMPLATE = u"""<input \
         type="submit" class="btn btn-default" \
         name="SubmitAction" value="{}" \
         onclick="$('#pleaseWaitDialog').modal('show')">"""
+
+SAVE_ACTION_TEMPLATE = u"""<input type="button" class="btn btn-default" \
+        value="{}" onclick="ajaxSaveFile();">"""
+
 PAGE_HEADER_TEMPLATE = u'&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>'
 BOTTOM_PADDING = u'<br />' * 2
 
@@ -65,6 +69,35 @@ WebAppState = namedtuple('WebAppState', [
      )
 
 
+class Action(object):
+
+    def __init__(self, name, function, key=None, template=ACTION_TEMPLATE):
+        """
+        :type name: str
+        :type function: callable
+        :type key: str
+        :type template: str
+        """
+        self.name = name
+        self.function = function
+        self.key = key
+        self.template = template
+
+    def __call__(self, document):
+        """
+        Call the action
+
+        :type document: MarkdownDocument
+        :param document:
+        :return: - (None, True)      : To continue with editor
+                 - ('Ok', True)      : To send 'Ok' as a result page
+                 - ('Closed', False) : To send 'Closed' as a result page and stop the server
+                 - (None, '/page')   : to redirect to '/page'
+        """
+        content, next_location = self.function(document)
+        return content, next_location
+
+
 class EditorRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
@@ -76,8 +109,10 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def get_html_content(self):
         return self.template.substitute(
             html_head=callable(self.server.app.html_head) and self.server.app.html_head() or self.server.app.html_head,
-            in_actions=u'&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.in_actions]),
-            out_actions=u'&nbsp;'.join([ACTION_TEMPLATE.format(k) for k, v in self.server.app.out_actions]),
+            in_actions=u'&nbsp;'.join(
+                    [a.template.format(a.name) for a in self.server.app.in_actions.values()]),
+            out_actions=u'&nbsp;'.join(
+                    [a.template.format(a.name) for a in self.server.app.out_actions.values()]),
             markdown_input=self.server.app.document.text,
             vim_mode=self.server.app.metadata.get('vim_mode') and 'checked' or '',
             html_result=self.server.app.document.get_html() + BOTTOM_PADDING,
@@ -95,6 +130,10 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             content = self.get_html_content().encode('utf8')
             self.send_response(200)
             self.send_header("Content-type", "text/html")
+        elif self.path == '/preview':
+            content = self.server.app.document.get_html_page().encode('utf8')
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
         else:
             content = ''
             self.send_response(404)
@@ -106,13 +145,15 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get('Content-Length'))
 
+        app = self.server.app
+
         # Ajax action handler
         path_name = self.path[1:]
-        if path_name in self.server.app.ajax_handlers:
+        if path_name in app.ajax_handlers:
             print('ajax post action: {}'.format(path_name))
             markdown_text = self.rfile.read(length).decode('utf8')
-            handler_func = self.server.app.ajax_handlers.get(path_name)
-            result_data = handler_func(self.server.app.document, markdown_text)
+            handler_func = app.ajax_handlers.get(path_name)
+            result_data = handler_func(app.document, markdown_text)
             if result_data:
                 self.wfile.write(result_data.encode('utf8'))
             return
@@ -126,38 +167,37 @@ class EditorRequestHandler(SimpleHTTPRequestHandler):
             qs = dict(parse_qsl(str(form_data), True))
             markdown_input = qs['markdown_text'].decode('utf8')
         action = qs.get('SubmitAction', '')
-        self.server.app.document.text = markdown_input
-        self.server.app.document.form_data = qs
-        self.server.app.metadata['vim_mode'] = 'vim_mode' in qs
+        app.document.text = markdown_input
+        app.document.form_data = qs
+        app.metadata['vim_mode'] = 'vim_mode' in qs
 
         print('form submit post action: {}'.format(action))
         print('QS keys: "{}"'.format('", "'.join(qs.keys())))
 
-        action_handler = dict(self.server.app.in_actions).get(action) or \
-                         dict(self.server.app.out_actions).get(action)
+        action_handler = app.in_actions.get(action) or app.out_actions.get(action)
 
         if action_handler:
             try:
-                content, keep_running = action_handler(self.server.app.document)
+                content, next_location = action_handler(app.document)
             except Exception as e:
                 tb = traceback.format_exc()
                 print(tb)
                 footer = u'<a href="/">Continue editing</a>'
                 content = u'<html><body><h4>{}</h4><pre>{}</pre>\n{}</body></html>'\
                     .format(e.message, tb, footer)
-                keep_running = True
+                next_location = '/'
 
             if content:
                 content = content.encode('utf8')
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
-                if not keep_running:
+                if not next_location:
                     self.server.app = None
             else:
-                content = ''.encode('utf8')
+                content = b''
                 self.send_response(302)
-                self.send_header('Location', '/')
-                if not keep_running:
+                self.send_header('Location', type(next_location) is bool and '/' or next_location)
+                if not next_location:
                     self.server.app = None
         else:
             content = b''
@@ -264,12 +304,11 @@ def write_output(output, text, encoding='utf8'):
 
 
 def action_close(_):
-    return None, False
+    return "Server Stopped", False
 
 
 def action_preview(document):
-    result = document.get_html_page()
-    return result, True
+    return None, '/preview'
 
 
 def action_save(document):
@@ -295,7 +334,7 @@ def ajax_preview(document, data):
     return document.get_html() + BOTTOM_PADDING
 
 
-def ajax_vim_mode(document, data, metadata):
+def ajax_vim_mode(_, data, metadata):
     metadata.update(json.loads(data))
     return u'OK'
 
@@ -317,18 +356,22 @@ def sys_edit(markdown_document, editor=None):
     return markdown_document
 
 
+def _as_objects(objs_or_tuples, _type):
+    return [isinstance(a, _type) and a or _type(*a) for a in objs_or_tuples]
+
+
 def terminal_edit(doc=None, actions=[], default_action=None):
-    all_actions = actions + [('Edit again', None, 'e'), ('Preview', None, 'p')]
+    all_actions = _as_objects(actions, Action) + [Action('Edit again', None, 'e'), Action('Preview', None, 'p')]
 
     if not doc:
         doc = MarkdownDocument()
 
     if doc.input_file or doc.output_file:
-        all_actions.append(('Save', action_save, 's'))
-    all_actions.append(('Quit', action_close, 'q'))
+        all_actions.append(Action('Save', action_save, 's'))
+    all_actions.append(Action('Quit', action_close, 'q'))
 
-    action_funcs = dict([(a[2], a[1]) for a in all_actions])
-    actions_prompt = [a[2] + ' : ' + a[0] for a in all_actions]
+    action_funcs = dict([(a.key, a) for a in all_actions])
+    actions_prompt = [a.key + ' : ' + a.name for a in all_actions]
 
     keep_running = True
     with tempfile.NamedTemporaryFile(mode='r+', suffix=".html") as f:
@@ -372,7 +415,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
         - ajax_handlers: map of 'ajax_req_path':ajax_handler_func to handle your own ajax requests
     """
 
-    default_actions = [('Preview', action_preview), ('Close', action_close)]
+    default_actions = [Action('Preview', action_preview), Action('Close', action_close)]
 
     metadata = {'vim_mode': False}
 
@@ -380,7 +423,7 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
         doc = MarkdownDocument()
 
     if doc.input_file or doc.output_file:
-        default_actions.insert(0, ('Save', action_save))
+        default_actions.insert(0, Action('Save', None, template=SAVE_ACTION_TEMPLATE))
         ajax_handlers.setdefault('ajaxSave', ajax_save)
 
     ajax_handlers.setdefault('ajaxPreview', ajax_preview)
@@ -395,16 +438,16 @@ def web_edit(doc=None, actions=[], title='', ajax_handlers={}, port=8000):
 
     if title:
         html_head = title
-    elif doc.input_file:
-        html_head = PAGE_HEADER_TEMPLATE.format(os.path.basename(doc.input_file))
+    elif doc.input_file or doc.output_file:
+        html_head = PAGE_HEADER_TEMPLATE.format(os.path.basename(doc.input_file or doc.output_file))
     else:
         html_head = ''
 
     app = WebAppState(
         document=doc,
         metadata=metadata,
-        in_actions=default_actions,
-        out_actions=actions,
+        in_actions=OrderedDict((a.name, a) for a in default_actions),
+        out_actions=OrderedDict((a.name, a) for a in _as_objects(actions, Action)),
         html_head=html_head,
         ajax_handlers=ajax_handlers
     )
