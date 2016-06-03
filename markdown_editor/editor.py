@@ -357,7 +357,7 @@ def sys_edit(markdown_document, editor=None):
 
 
 def _as_objects(objs_or_tuples, _type):
-    return [isinstance(a, _type) and a or _type(*a) for a in objs_or_tuples]
+    return [isinstance(a, (list, tuple)) and _type(*a) or a for a in objs_or_tuples]
 
 
 def terminal_edit(doc=None, actions=[], default_action=None):
