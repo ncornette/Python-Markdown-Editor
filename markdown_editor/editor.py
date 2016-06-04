@@ -340,19 +340,13 @@ def ajax_vim_mode(_, data, metadata):
 
 
 def sys_edit(markdown_document, editor=None):
-    use_editor = editor or SYS_EDITOR
     with tempfile.NamedTemporaryFile(mode='r+', suffix=".markdown") as f:
-        if sys.version_info[0] < 3:
-            temp = codecs.getwriter('utf8')(f)
-            tempr = codecs.getreader('utf8')(f)
-        else:
-            temp = f
-            tempr = f
+        temp = codecs.getwriter('utf8')(f) if (sys.version_info[0] < 3) else f
         temp.write(markdown_document.text)
         temp.flush()
-        call([use_editor, temp.name])
-        temp.seek(0)
-        markdown_document.text = tempr.read()
+        call([editor or SYS_EDITOR, temp.name])
+        with codecs.open(temp.name, 'r', 'utf8') as g:
+            markdown_document.text = g.read()
     return markdown_document
 
 
@@ -375,10 +369,7 @@ def terminal_edit(doc=None, actions=[], default_action=None):
 
     keep_running = True
     with tempfile.NamedTemporaryFile(mode='r+', suffix=".html") as f:
-        if sys.version_info[0] < 3:
-            temp = codecs.getwriter('utf8')(f)
-        else:
-            temp = f
+        temp = codecs.getwriter('utf8')(f) if sys.version_info[0] < 3 else f
         temp.write(doc.get_html_page())
         temp.flush()
         while keep_running:
