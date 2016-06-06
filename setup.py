@@ -17,8 +17,8 @@ here = path.abspath(path.dirname(__file__))
 with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-data_dirs = ['markdown_editor/libs', 'markdown_editor/styles']
-data_files = ['markdown_editor/markdown_edit.html']
+data_dirs = ['markdown_editor/libs', 'markdown_editor/css', 'markdown_editor/js']
+data_files = ['markdown_editor/markdown_edit.tpl']
 
 r = re.compile('^markdown_editor/')
 datafiles = []
@@ -28,7 +28,7 @@ for data_dir in data_dirs:
 datafiles.extend(r.sub('', f) for f in data_files)
 
 setup(name='Markdown-Editor',
-      version='0.9.8',
+      version='0.9.9',
       description='Standalone editor for your markdown files',
       long_description=long_description,
       classifiers=[

@@ -1,0 +1,40 @@
+.CodeMirror {
+    font-size: medium;
+}
+
+.focusedInput {
+    border-color: #ccc;
+    border-color: rgba(82,168,236,.8);
+    outline: 0;
+    outline: thin dotted \9;
+    -moz-box-shadow: 0 0 8px rgba(82,168,236,.6);
+    box-shadow: 0 0 8px rgba(82,168,236,.6);
+}
+
+.html-output {
+    margin-left: 0;
+    margin-right: 0;
+    background-color: #fff;
+    border-width: 1px;
+    border-color: #ddd;
+    border-radius: 4px;
+    box-shadow: none;
+    position: relative;
+    padding: 15px 15px 0px;
+    height:100%;
+}
+
+#editor {
+    overflow: hidden;
+}
+
+body {
+    background-color: white;
+    overflow:auto;
+}
+
+* {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
