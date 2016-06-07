@@ -69,7 +69,7 @@ def ajax_preview():
     return doc.get_html()
 
 
-@app.post('/ajax/vim_mode')
+@app.post('/vim_mode')
 def ajax_vim_mode():
     response.set_cookie('vim_mode', 'true' if request.json.get('vim_mode') else 'false')
 
