@@ -63,6 +63,11 @@ $(document).ready(function() {
     // Setup CodeMirror for markdown input
     CodeMirror.commands.save = function(instance) {ajaxSaveFile();}
 
+    var close_button = $('input[ value = "Close"]');
+    if (close_button) {
+        CodeMirror.Vim.defineEx('quit', 'q', function() {close_button.click()})
+    }
+
     myCodeMirror = CodeMirror.fromTextArea(document.getElementById('markdown_input'), {
         value: "",
         mode: {name:"markdown",fencedCodeBlocks:true, underscoresBreakWords:false},
