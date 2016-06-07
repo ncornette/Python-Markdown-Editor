@@ -41,8 +41,9 @@ Features
 Dependencies
 ~~~~~~~~~~~~
 
--  markdown
--  pygments
+-  Markdown
+-  Pygments
+-  Bottle
 
 Other usage examples
 ~~~~~~~~~~~~~~~~~~~~
@@ -69,7 +70,7 @@ example :
 
 .. code:: python
 
-    import markdown_edit
+    from markdown_editor import web_edit
 
     # ...
 
@@ -84,10 +85,10 @@ example :
         return html_to_display_as_result, keep_running_local_server
 
     if __name__ == '__main__:
-        markdown_edit.web_edit(
+        web_edit.start(
             actions =
                 [
-                    ('Send',action_send),
+                    ('Send', action_send),
                 ],
             title = MY_HTML_HEAD)
 
