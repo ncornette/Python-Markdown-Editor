@@ -113,7 +113,7 @@ def preview():
 def editor():
     vim_mode = request.get_cookie('vim_mode', 'false')
 
-    return template(os.path.join(script_dir, 'markdown_edit'),
+    return template(os.path.join(script_dir, 'markdown_edit.tpl'),
                     html_head=app.config['myapp.html_head'],
                     in_actions=u'&nbsp;'.join([a.html for a in app.config['myapp.in_actions']]),
                     out_actions=u'&nbsp;'.join([a.html for a in app.config['myapp.out_actions']]),
