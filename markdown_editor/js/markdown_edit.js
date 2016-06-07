@@ -32,7 +32,7 @@ function ajaxSaveFile() {
 function ajaxVimMode(value) {
     $.ajax({
         type: "POST",
-        url: "/vim_mode",
+        url: "/ajax/vim_mode",
         data: JSON.stringify({vim_mode: value}),
         contentType: "application/json"});
 }
