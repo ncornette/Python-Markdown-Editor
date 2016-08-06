@@ -24,7 +24,7 @@ def parse_options():  # pragma: no cover
 
     parser = optparse.OptionParser(usage=usage, description=desc, version=ver)
     parser.add_option("-p", "--port", dest="port", default=8222,
-                      help="Change listen port for Web eidt.")
+                      help="Change listen port for Web edit.")
     parser.add_option("-t", "--terminal", dest="term_edit",
                       action='store_true', default=False,
                       help="Edit within terminal.")
