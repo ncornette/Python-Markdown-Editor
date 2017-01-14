@@ -68,10 +68,7 @@ def parse_options():  # pragma: no cover
     if not options.extensions:
         options.extensions = []
 
-    extensions = []
-
-    extensions.extend(MARKDOWN_EXT)
-    extensions.extend(options.extensions)
+    extensions = list(MARKDOWN_EXT) + options.extensions
 
     return {'input': input_file,
             'term_edit': options.term_edit or options.term_preview,
