@@ -68,7 +68,10 @@ def parse_options():  # pragma: no cover
     if not options.extensions:
         options.extensions = []
 
-    options.extensions.extend(MARKDOWN_EXT)
+    extensions = []
+
+    extensions.extend(MARKDOWN_EXT)
+    extensions.extend(options.extensions)
 
     return {'input': input_file,
             'term_edit': options.term_edit or options.term_preview,
@@ -76,7 +79,7 @@ def parse_options():  # pragma: no cover
             'port': options.port,
             'output': options.filename,
             'safe_mode': options.safe,
-            'extensions': options.extensions,
+            'extensions': extensions,
             'encoding': options.encoding,
             'output_format': options.output_format,
             'lazy_ol': options.lazy_ol}, options.verbose
