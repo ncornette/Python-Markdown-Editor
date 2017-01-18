@@ -44,6 +44,7 @@ Dependencies
 -  Markdown
 -  Pygments
 -  Bottle
+-  pymdown-extensions
 
 Other usage examples
 ~~~~~~~~~~~~~~~~~~~~

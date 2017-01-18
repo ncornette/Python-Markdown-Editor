@@ -1,3 +1,4 @@
 Markdown
 Pygments
 bottle
+pymdown-extensions
