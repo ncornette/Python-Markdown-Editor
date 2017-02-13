@@ -1,4 +1,4 @@
 Markdown
 Pygments
 bottle
-pymdown-extensions
+pymdown-extensions>=2.0
