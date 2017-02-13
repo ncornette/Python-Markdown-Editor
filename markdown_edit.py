@@ -52,7 +52,7 @@ def parse_options():  # pragma: no cover
                       action="store_const", const=DEBUG, dest="verbose",
                       help="Print debug messages.")
     parser.add_option("-x", "--extension", action="append", dest="extensions",
-                      help="Load extension EXTENSION (extra, pymdownx.highlight & pymdownx.github already included)",
+                      help="Load extension EXTENSION (extra & pymdownx.github already included)",
                       metavar="EXTENSION")
     parser.add_option("-n", "--no_lazy_ol", dest="lazy_ol",
                       action='store_false', default=True,
