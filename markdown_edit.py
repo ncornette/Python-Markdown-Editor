@@ -7,7 +7,7 @@ from logging import DEBUG, INFO, CRITICAL
 
 import markdown
 
-from markdown_editor.editor import MarkdownDocument, MARKDOWN_EXT
+from markdown_editor.editor import MarkdownDocument, MARKDOWN_EXT, PYMDOWNX_EXT
 
 logger = logging.getLogger('MARKDOWN_EDITOR')
 
@@ -52,7 +52,7 @@ def parse_options():  # pragma: no cover
                       action="store_const", const=DEBUG, dest="verbose",
                       help="Print debug messages.")
     parser.add_option("-x", "--extension", action="append", dest="extensions",
-                      help="Load extension EXTENSION (codehilite & extra already included)",
+                      help="Load extension EXTENSION (extra & pymdownx.github already included)",
                       metavar="EXTENSION")
     parser.add_option("-n", "--no_lazy_ol", dest="lazy_ol",
                       action='store_false', default=True,
@@ -68,7 +68,7 @@ def parse_options():  # pragma: no cover
     if not options.extensions:
         options.extensions = []
 
-    options.extensions.extend(MARKDOWN_EXT)
+    extensions = list(MARKDOWN_EXT + PYMDOWNX_EXT) + options.extensions
 
     return {'input': input_file,
             'term_edit': options.term_edit or options.term_preview,
@@ -76,7 +76,7 @@ def parse_options():  # pragma: no cover
             'port': options.port,
             'output': options.filename,
             'safe_mode': options.safe,
-            'extensions': options.extensions,
+            'extensions': extensions,
             'encoding': options.encoding,
             'output_format': options.output_format,
             'lazy_ol': options.lazy_ol}, options.verbose

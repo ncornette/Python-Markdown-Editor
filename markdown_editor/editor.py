@@ -14,7 +14,8 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 sys.path.append(script_dir)
 
-MARKDOWN_EXT = ('codehilite', 'extra', 'strikethrough')
+MARKDOWN_EXT = ('footnotes', 'attr_list', 'def_list', 'abbr')
+PYMDOWNX_EXT = ('pymdownx.github', 'pymdownx.extrarawhtml')
 MARKDOWN_CSS = join(script_dir, 'css/markdown.css')
 PYGMENTS_CSS = join(script_dir, 'css/pygments.css')
 
