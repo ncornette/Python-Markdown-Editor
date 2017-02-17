@@ -28,7 +28,7 @@ for data_dir in data_dirs:
 datafiles.extend(r.sub('', f) for f in data_files)
 
 setup(name='Markdown-Editor',
-      version='1.0.1',
+      version='1.0.2',
       description='Standalone editor for your markdown files',
       long_description=long_description,
       classifiers=[
@@ -42,6 +42,7 @@ setup(name='Markdown-Editor',
           'Programming Language :: Python :: 3.3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
       ],
       author='Nicolas Cornette',
       author_email='nicolas.cornette@gmail.com',
