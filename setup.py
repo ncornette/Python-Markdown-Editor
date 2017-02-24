@@ -28,7 +28,7 @@ for data_dir in data_dirs:
 datafiles.extend(r.sub('', f) for f in data_files)
 
 setup(name='Markdown-Editor',
-      version='1.0.2',
+      version='1.0.3',
       description='Standalone editor for your markdown files',
       long_description=long_description,
       classifiers=[
