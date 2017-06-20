@@ -53,7 +53,7 @@ Launch editor without input file for testing :
 
 .. code:: bash
 
-    $ markdown_edit 
+    $ markdown_edit
 
 Edit markdown file and save both markdown and html outputs :
 
@@ -72,26 +72,29 @@ example :
 .. code:: python
 
     from markdown_editor import web_edit
+    from markdown_editor.editor import MarkdownDocument
 
     # ...
+
+    MY_HTML_HEAD = 'Editor title'
 
     def action_send(document):
 
         send_markdown_text(document.text)
-        # or 
+        # or
         send_raw_html_code(document.getHtml())
-        # or 
+        # or
         send_html_with_styles(document.getHtmlPage())
 
         return html_to_display_as_result, keep_running_local_server
 
     if __name__ == '__main__:
-        web_edit.start(
-            actions =
-                [
+        doc = MarkdownDocument()
+        web_edit.start(doc,
+            custom_actions=[
                     ('Send', action_send),
-                ],
-            title = MY_HTML_HEAD)
+            ],
+            title=MY_HTML_HEAD)
 
 .. |Build Status| image:: https://travis-ci.org/ncornette/Python-Markdown-Editor.svg?branch=master
    :target: https://travis-ci.org/ncornette/Python-Markdown-Editor
