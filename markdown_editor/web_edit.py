@@ -4,6 +4,7 @@
 import codecs
 import os
 import webbrowser
+import socket
 
 import sys
 from bottle import run, template, static_file, Bottle, request, redirect, response
@@ -145,6 +146,21 @@ def start(doc, custom_actions=None, title='', ajax_handlers=None, port=8222):
             'ajax_handlers': ajax_handlers or {}
             }
         }, make_namespaces=True)
+
+    #Find correct port automatically, to allow multiple sessions
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    while 1:
+        try:
+            s.bind(('127.0.0.1',port))
+            s.close()
+            break
+        except socket.error as e:
+            if e.errno==98:
+                print("Port "+str(port)+" is already in use")
+                port=port+1
+        
+    
+
 
     webbrowser.open('http://localhost:{}'.format(port))
 
