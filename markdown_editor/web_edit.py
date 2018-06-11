@@ -1,16 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import codecs
 import os
-import webbrowser
 import socket
-
 import sys
-from bottle import run, template, static_file, Bottle, request, redirect, response
-from markdown_editor.editor import Action, _as_objects, MarkdownDocument
+import codecs
+import webbrowser
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
+from bottle import (
+    run,
+    template,
+    static_file,
+    Bottle,
+    request,
+    redirect,
+    response
+)
+from markdown_editor.editor import (
+    Action,
+    _as_objects,
+    MarkdownDocument
+)
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 PAGE_HEADER_TEMPLATE = u'&nbsp;<span class="glyphicon glyphicon-file"></span>&nbsp;<span>{}</span>'
 
@@ -23,6 +35,7 @@ SAVE_ACTION_TEMPLATE = u"""\
 
 
 class WebAction(Action):
+
     def __init__(self, name, function, key=None, action_template=ACTION_TEMPLATE):
         Action.__init__(self, name, function, key)
         self.html = action_template.format(name)
@@ -83,17 +96,17 @@ def ajax_handle(path):
 
 @app.get('/libs/<path:path>')
 def static_lib(path):
-    return static_file(path, os.path.join(script_dir, 'libs'))
+    return static_file(path, os.path.join(SCRIPT_DIR, 'libs'))
 
 
 @app.get('/css/<path:path>')
 def static_css(path):
-    return static_file(path, os.path.join(script_dir, 'css'))
+    return static_file(path, os.path.join(SCRIPT_DIR, 'css'))
 
 
 @app.get('/js/<path:path>')
 def static_css(path):
-    return static_file(path, os.path.join(script_dir, 'js'))
+    return static_file(path, os.path.join(SCRIPT_DIR, 'js'))
 
 
 @app.post('/')
@@ -114,7 +127,7 @@ def preview():
 def editor():
     vim_mode = request.get_cookie('vim_mode', 'false')
 
-    return template(os.path.join(script_dir, 'markdown_edit.tpl'),
+    return template(os.path.join(SCRIPT_DIR, 'markdown_edit.tpl'),
                     html_head=app.config['myapp.html_head'],
                     in_actions=u'&nbsp;'.join([a.html for a in app.config['myapp.in_actions']]),
                     out_actions=u'&nbsp;'.join([a.html for a in app.config['myapp.out_actions']]),
@@ -165,6 +178,7 @@ def start(doc, custom_actions=None, title='', ajax_handlers=None, port=8222):
     webbrowser.open('http://localhost:{}'.format(port))
 
     run(app, host='localhost', port=port, debug=False, reloader=False)
+
 
 if __name__ == '__main__':
     start(MarkdownDocument())
