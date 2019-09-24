@@ -5,11 +5,14 @@ import codecs
 from os import path
 
 from setuptools import setup
-from pip.req import parse_requirements
-from pip.download import PipSession
 
-install_reqs = parse_requirements('requirements.txt', session=PipSession())
-reqs = [str(ir.req) for ir in install_reqs]
+def parse_requirements(filename):
+    """ load requirements from a pip requirements file """
+    lineiter = (line.strip() for line in open(filename))
+    return [line for line in lineiter if line and not line.startswith("#")]
+
+install_reqs = parse_requirements('requirements.txt')
+reqs = [str(ir) for ir in install_reqs]
 
 here = path.abspath(path.dirname(__file__))
 
@@ -28,7 +31,7 @@ for data_dir in data_dirs:
 datafiles.extend(r.sub('', f) for f in data_files)
 
 setup(name='Markdown-Editor',
-      version='1.0.3',
+      version='1.0.4',
       description='Standalone editor for your markdown files',
       long_description=long_description,
       classifiers=[
