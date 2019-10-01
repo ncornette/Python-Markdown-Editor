@@ -20,7 +20,7 @@ def parse_options():  # pragma: no cover
     desc = "Local web editor for Python Markdown, " \
            "a Python implementation of John Gruber's Markdown. " \
            "http://www.freewisdom.org/projects/python-markdown/"
-    ver = '%prog {}'.format(markdown.version)
+    ver = '%prog 1.0.4'
 
     parser = optparse.OptionParser(usage=usage, description=desc, version=ver)
     parser.add_option("-p", "--port", dest="port", default=8222,
@@ -102,6 +102,7 @@ def main():
     else:
         from markdown_editor import web_edit
         web_edit.start(markdown_document, port=options['port'])
+
 
 if __name__ == '__main__':
     main()

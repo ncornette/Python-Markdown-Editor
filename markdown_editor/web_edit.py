@@ -136,7 +136,6 @@ def editor():
 
 
 def start(doc, custom_actions=None, title='', ajax_handlers=None, port=8222):
-
     default_actions = [WebAction('Preview', action_preview), WebAction('Close', action_close)]
 
     if doc.input_file or doc.output_file:
@@ -157,23 +156,20 @@ def start(doc, custom_actions=None, title='', ajax_handlers=None, port=8222):
             'out_actions': _as_objects(custom_actions, WebAction),
             'html_head': html_head,
             'ajax_handlers': ajax_handlers or {}
-            }
-        }, make_namespaces=True)
+        }
+    }, make_namespaces=True)
 
-    #Find correct port automatically, to allow multiple sessions
-    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    # Find correct port automatically, to allow multiple sessions
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while 1:
         try:
-            s.bind(('127.0.0.1',port))
+            s.bind(('127.0.0.1', port))
             s.close()
             break
         except socket.error as e:
-            if e.errno==98:
-                print("Port "+str(port)+" is already in use")
-                port=port+1
-        
-    
-
+            if e.errno == 98:
+                print("Port " + str(port) + " is already in use")
+                port = port + 1
 
     webbrowser.open('http://localhost:{}'.format(port))
 

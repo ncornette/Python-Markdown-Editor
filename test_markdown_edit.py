@@ -5,6 +5,7 @@ import os
 import unittest
 from markdown_editor.editor import MarkdownDocument
 
+
 class MyTestCase(unittest.TestCase):
 
     def test_document_html(self):
@@ -21,6 +22,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual('\n', MarkdownDocument('### Spam\n').detect_newline())
         self.assertEqual('\r\n', MarkdownDocument('### Spam\r\nEggs').detect_newline())
         self.assertEqual('\r', MarkdownDocument('### Spam\rEggs').detect_newline())
+
 
 if __name__ == '__main__':
     unittest.main()

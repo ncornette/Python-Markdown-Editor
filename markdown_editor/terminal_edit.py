@@ -15,7 +15,9 @@ from markdown_editor.web_edit import action_close
 SYS_EDITOR = os.environ.get('EDITOR', 'vim')
 
 if sys.version_info[0] >= 3:
-    raw_input = input
+    _raw_input = input
+else:
+    _raw_input = raw_input
 
 
 def sys_edit(markdown_document, editor=None):
@@ -29,7 +31,9 @@ def sys_edit(markdown_document, editor=None):
     return markdown_document
 
 
-def start(doc, actions=[], default_action=None):
+def start(doc, actions=None, default_action=None):
+    if actions is None:
+        actions = []
     all_actions = _as_objects(actions, Action) + [Action('Edit again', None, 'e'), Action('Preview', None, 'p')]
 
     if doc.input_file or doc.output_file:
@@ -45,8 +49,8 @@ def start(doc, actions=[], default_action=None):
         temp.write(doc.get_html_page())
         temp.flush()
         while keep_running:
-            command = default_action or raw_input('''Choose command :\n\n{}\n?: '''.format(
-                    '\n'.join(actions_prompt)))
+            command = default_action or _raw_input('''Choose command :\n\n{}\n?: '''.format(
+                '\n'.join(actions_prompt)))
 
             default_action = None
             if command[:1] == 'e':
@@ -58,6 +62,7 @@ def start(doc, actions=[], default_action=None):
                 webbrowser.open('file:///{}'.format(temp.name))
             elif command[:1] in action_funcs:
                 result, keep_running = action_funcs[command](doc)
+
 
 if __name__ == '__main__':
     start(MarkdownDocument())
