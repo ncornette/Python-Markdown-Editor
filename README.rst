@@ -1,7 +1,7 @@
 Python-Markdown-Editor
 ======================
 
-|Build Status| |PyPI py versions| |PyPI version|
+|Build Status| |PyPI py versions| |PyPI version| |Code quality|
 
 Standalone editor for your local markdown files
 
@@ -102,3 +102,5 @@ example :
    :target: https://pypi.python.org/pypi/Markdown-Editor
 .. |PyPI version| image:: https://img.shields.io/pypi/v/Markdown-Editor.svg?maxAge=2592000
    :target: https://pypi.python.org/pypi/Markdown-Editor
+.. |Code quality| image:: https://api.codacy.com/project/badge/Grade/189b747c1f874f3090168cae42b35217
+   :target: https://www.codacy.com/manual/nicolas-cornette/Python-Markdown-Editor?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ncornette/Python-Markdown-Editor&amp;utm_campaign=Badge_Grade
