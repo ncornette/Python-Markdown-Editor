@@ -20,6 +20,7 @@ function tryAjaxUpdatePreview() {
             success: function( data ) {
                 isSending = false;
                 setTimeout(tryAjaxUpdatePreview, 0);
+                data = DOMPurify.sanitize(data);
                 $("#html_result").html(data);
         }});
     }
