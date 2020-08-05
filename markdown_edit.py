@@ -19,7 +19,7 @@ def parse_options():  # pragma: no cover
     usage = """%prog [options] [INPUTFILE]"""
     desc = "Local web editor for Python Markdown, " \
            "a Python implementation of John Gruber's Markdown. " \
-           "http://www.freewisdom.org/projects/python-markdown/"
+           "https://python-markdown.github.io/"
     ver = '%prog 1.0.4'
 
     parser = optparse.OptionParser(usage=usage, description=desc, version=ver)
