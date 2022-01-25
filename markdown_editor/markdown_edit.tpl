@@ -22,6 +22,7 @@
         <link href="/css/pygments.css" rel="stylesheet">
         <link href="/css/markdown_edit.css" rel="stylesheet">
         <script src="/js/markdown_edit.js"></script>
+        <script src="/js/purify.min.js"></script>
     </head>
 
     <body style="background-color: rgb(204, 204, 204);">
